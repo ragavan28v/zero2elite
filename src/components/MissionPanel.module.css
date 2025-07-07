@@ -1,0 +1,250 @@
+.missionPanel {
+  width: 100%;
+  max-width: 1200px;
+  margin: 32px auto 0 auto;
+  padding: 0 16px 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  background: #f8fafc;
+}
+
+.missionBlock, .engineBlock, .timelineBlock, .weekendBlock, .mapBlock, .outcomesBlock {
+  background: rgba(255,255,255,0.68);
+  border-radius: 24px;
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.13), 0 1.5px 8px 0 rgba(0,255,255,0.10);
+  padding: 32px 24px;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(24px) saturate(1.2);
+  position: relative;
+}
+
+.missionBlock h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #222;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 12px #00fff733;
+}
+
+.engineBlock h3, .timelineBlock h3, .weekendBlock h3, .mapBlock h3, .outcomesBlock h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #222;
+  letter-spacing: 0.01em;
+}
+
+.engineRow {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.engineCard {
+  flex: 1 1 180px;
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 20px 18px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 1.13rem;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  color: #222;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  transition: transform 0.13s, box-shadow 0.13s;
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+.engineCard:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+.engineCard svg {
+  font-size: 1.7em;
+  margin-bottom: 2px;
+  color: #00e6ff;
+  filter: drop-shadow(0 0 10px #00fff7cc);
+}
+.engineCard b {
+  font-size: 1.15em;
+  color: #222;
+}
+.engineCard span {
+  font-size: 1em;
+  color: #444;
+}
+
+.timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: space-between;
+}
+.timelineCard {
+  flex: 1 1 260px;
+  min-width: 220px;
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 20px 16px 16px 16px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  position: relative;
+  transition: transform 0.13s, box-shadow 0.13s;
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+.timelineCard:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+.timelineIcon {
+  font-size: 2.1em;
+  color: #00e6ff;
+  margin-top: 2px;
+  filter: drop-shadow(0 0 10px #00fff7cc);
+}
+.timelineCard b {
+  font-size: 1.13em;
+  color: #222;
+}
+.timelineCard .time {
+  font-size: 0.98em;
+  color: #00bcd4;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.core { background: linear-gradient(90deg, #00ffe7 0%, #6f00ff 100%); opacity: 0.22; }
+.fuel { background: linear-gradient(90deg, #6f00ff 0%, #00ffe7 100%); opacity: 0.22; }
+.college { background: linear-gradient(90deg, #00ffe7 0%, #ff00c8 100%); opacity: 0.22; }
+.creation { background: linear-gradient(90deg, #ff00c8 0%, #00ffe7 100%); opacity: 0.22; }
+.decompress { background: linear-gradient(90deg, #6f00ff 0%, #ff00c8 100%); opacity: 0.22; }
+
+.weekendTimeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: space-between;
+}
+.weekendCard {
+  flex: 1 1 180px;
+  min-width: 160px;
+  background: rgba(255,255,255,0.68);
+  border-radius: 16px;
+  padding: 16px 14px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 1.08rem;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  color: #222;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  position: relative;
+  transition: transform 0.13s, box-shadow 0.13s;
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+.weekendCard:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+.weekendIcon {
+  font-size: 1.5em;
+  color: #00e6ff;
+  margin-bottom: 2px;
+  filter: drop-shadow(0 0 10px #00fff7cc);
+}
+.weekendCard b {
+  color: #222;
+}
+.weekendCard .time {
+  font-size: 1em;
+  color: #00bcd4;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.mapGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+.mapCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 14px;
+  padding: 16px 12px 12px 12px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  color: #222;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  font-size: 1.01rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.13s, box-shadow 0.13s;
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+.mapCard:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+.mapCard b {
+  color: #222;
+  font-size: 1.08em;
+}
+.mapCard span {
+  color: #555;
+  font-size: 0.98em;
+}
+
+.outcomesBlock {
+  text-align: center;
+  background: rgba(255,255,255,0.82);
+  color: #222;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.13);
+  padding: 32px 18px 24px 18px;
+  border: none;
+}
+.outcomesBlock h3 {
+  color: #222;
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+}
+.outcomesList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  font-size: 1.08em;
+}
+.outcomesList li {
+  background: rgba(255,255,255,0.68);
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: #444;
+  font-weight: 600;
+  box-shadow: 0 2px 8px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+}
+.execute {
+  margin-top: 18px;
+  font-size: 1.13em;
+  color: #222;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  text-shadow: 0 1px 8px #00fff733;
+}
+
+@media (max-width: 900px) {
+  .missionPanel { padding: 0 4px 24px 4px; }
+  .engineRow, .timeline, .weekendTimeline { flex-direction: column; gap: 16px; }
+  .mapGrid { grid-template-columns: 1fr; }
+} 
