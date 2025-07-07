@@ -1,6 +1,6 @@
 import { CalendarDaysIcon } from '@heroicons/react/24/solid';
-import { useTrackerStore, getLevel, cumulativeXP } from '../store';
-import React, { useState, useEffect } from 'react';
+import { useTrackerStore, getLevel } from '../store';
+import { useState, useEffect } from 'react';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -276,7 +276,7 @@ export default function TopBar() {
         {/* Right: Level Badge Circle */}
         <LevelBadgeCircle eliteScore={eliteScore} />
       </header>
-      {showLevelUp && <LevelUpModal level={level} onClose={() => setShowLevelUp(false)} />}
+      {showLevelUp && <LevelUpModal level={{ ...level, icon: String(level.icon), title: String(level.title) }} onClose={() => setShowLevelUp(false)} />}
     </>
   );
 } 

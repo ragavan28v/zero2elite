@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTrackerStore } from '../store';
 
 export default function DailyJournal({ compact = false }: { compact?: boolean }) {
@@ -12,10 +12,6 @@ export default function DailyJournal({ compact = false }: { compact?: boolean })
     setEntry(journal);
     setModalValue(journal);
   }, [journal, currentDate]);
-
-  const handleSave = () => {
-    setJournal(entry);
-  };
 
   const openModal = () => {
     setModalValue(entry);

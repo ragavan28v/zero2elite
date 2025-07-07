@@ -1,6 +1,5 @@
-import React from "react";
+import { FaBrain, FaHammer, FaGlobe, FaCalendarAlt, FaStar, FaBook, FaMicrophone, FaProjectDiagram, FaChartLine, FaBed, FaUtensils, FaDumbbell, FaRegSmile, FaRegEdit, FaMusic, FaTasks, FaRegSun, FaRegListAlt, FaRegPlayCircle } from "react-icons/fa";
 import styles from "./MissionPanel.module.css";
-import { FaBrain, FaHammer, FaGlobe, FaClock, FaRocket, FaCalendarAlt, FaStar, FaBook, FaMicrophone, FaProjectDiagram, FaUserAstronaut, FaChartLine, FaBed, FaUtensils, FaDumbbell, FaRegSmile, FaRegEdit, FaMusic, FaChalkboardTeacher, FaTasks, FaRegSun, FaRegMoon, FaRegListAlt, FaRegPlayCircle } from "react-icons/fa";
 
 const dailyBlocks = [
   { icon: <FaRegSun />, title: "Hydrate + Stretch", time: "5:00–5:15 AM" },
@@ -66,7 +65,7 @@ export default function MissionPanel() {
       <section className={styles.timelineBlock}>
         <h3>⏰ Hyper-Effective Daily Structure</h3>
         <div className={styles.timeline}>
-          {dailyBlocks.map((block, i) => (
+          {dailyBlocks.map((block) => (
             <div key={block.title + block.time} className={styles.timelineCard}>
               <div className={styles.timelineIcon}>{block.icon}</div>
               <div>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTrackerStore } from '../store';
 
 export default function ProgressDonut() {
@@ -9,7 +8,6 @@ export default function ProgressDonut() {
   const total = blocks.length;
   const percentDone = total ? (done / total) * 100 : 0;
   const percentSkipped = total ? (skipped / total) * 100 : 0;
-  const percentPending = 100 - percentDone - percentSkipped;
 
   const size = 140;
   const stroke = 18;

@@ -1,6 +1,6 @@
 import { useTrackerStore, getStreakAsOfYesterday } from '../store';
 import { StarIcon } from '@heroicons/react/24/solid';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function StreakStars() {
   const { days } = useTrackerStore();

@@ -3,8 +3,6 @@ import { useTrackerStore, getLevel } from '../store';
 export default function XPIndicator() {
   const { eliteScore } = useTrackerStore();
   const level = getLevel(eliteScore);
-  const prevLevelXP = level.level > 1 ? getLevel(eliteScore - 1).xpToNext + eliteScore - 1 : 0;
-  const progress = (eliteScore - (eliteScore - level.xpToNext)) / (level.xpToNext === 0 ? 1 : level.xpToNext + eliteScore - (eliteScore - level.xpToNext));
 
   return (
     <div style={{

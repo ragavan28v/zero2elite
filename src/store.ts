@@ -89,7 +89,7 @@ const levelList = [
 // Cumulative XP thresholds for each level
 export const cumulativeXP = [0];
 for (let i = 0; i < levelList.length; i++) {
-  cumulativeXP[i + 1] = cumulativeXP[i] + levelList[i][2];
+  cumulativeXP[i + 1] = cumulativeXP[i] + Number(levelList[i][2]);
 }
 
 export function getLevel(eliteScore: number) {
@@ -105,7 +105,7 @@ export function getLevel(eliteScore: number) {
   return { level: levelList.length, title: levelList[levelList.length - 1][1], icon: levelList[levelList.length - 1][0], xpToNext: 0, prevLevelXP: cumulativeXP[cumulativeXP.length - 2], nextLevelXP: cumulativeXP[cumulativeXP.length - 1] };
 }
 
-function calculateGamifiedStats(days: Record<string, DayData>, currentDate: string, prevStreak: number, prevLastStreakDate?: string): { streak: number, eliteScore: number, lastStreakDate: string } {
+function calculateGamifiedStats(days: Record<string, DayData>, currentDate: string): { streak: number, eliteScore: number, lastStreakDate: string } {
   let eliteScore = 0;
   let lastStreakDate = '';
   let streakBonusDays = 0;
@@ -161,45 +161,45 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   eliteScore: 0,
   lastStreakDate: '',
   setDate: (date) => {
-    const { days, streak, lastStreakDate } = get();
+    const { days } = get();
     if (!days[date]) {
       days[date] = { date, blocks: defaultBlocks.map(b => ({ ...b })) };
     }
-    const stats = calculateGamifiedStats(days, date, streak, lastStreakDate);
+    const stats = calculateGamifiedStats(days, date);
     set({ currentDate: date, days: { ...days }, ...stats });
     setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
   },
   markBlock: (blockIdx, status) => {
-    const { currentDate, days, streak, lastStreakDate } = get();
+    const { currentDate, days } = get();
     const blocks = days[currentDate].blocks.map((b, i) =>
       i === blockIdx ? { ...b, status } : b
     );
     days[currentDate].blocks = blocks;
-    const stats = calculateGamifiedStats(days, currentDate, streak, lastStreakDate);
+    const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
     setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
   },
   addNote: (blockIdx, note) => {
-    const { currentDate, days, streak, lastStreakDate } = get();
+    const { currentDate, days } = get();
     const blocks = days[currentDate].blocks.map((b, i) =>
       i === blockIdx ? { ...b, note } : b
     );
     days[currentDate].blocks = blocks;
-    const stats = calculateGamifiedStats(days, currentDate, streak, lastStreakDate);
+    const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
     setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
   },
   setJournal: (journal) => {
-    const { currentDate, days, streak, lastStreakDate } = get();
+    const { currentDate, days } = get();
     days[currentDate].journal = journal;
-    const stats = calculateGamifiedStats(days, currentDate, streak, lastStreakDate);
+    const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
     setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
   },
   resetDay: () => {
-    const { currentDate, days, streak, lastStreakDate } = get();
+    const { currentDate, days } = get();
     days[currentDate].blocks = defaultBlocks.map(b => ({ ...b }));
-    const stats = calculateGamifiedStats(days, currentDate, streak, lastStreakDate);
+    const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
     setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
   },
