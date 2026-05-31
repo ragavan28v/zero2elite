@@ -2,9 +2,29 @@ import { useTrackerStore } from '../store';
 import { CheckCircleIcon, XCircleIcon, MinusCircleIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 
+// Import defaultBlocks from store
+const defaultBlocks = [
+  { time: '5:00–5:15 AM', label: 'Hydrate + Stretch', status: 'pending' },
+  { time: '5:15–5:30 AM', label: 'Breath Meditation', status: 'pending' },
+  { time: '5:30–6:00 AM', label: 'Workout', status: 'pending' },
+  { time: '6:00–6:30 AM', label: 'Shower and Get Ready', status: 'pending' },
+  { time: '6:30–7:30 AM', label: 'Book Reading (1 Chapter)', status: 'pending' },
+  { time: '7:30–8:20 AM', label: 'AI/ML Study, Micro Blog, Tech Trends, Podcast Walk, Voice Practice', status: 'pending' },
+  { time: '8:20–8:40 AM', label: 'Healthy Breakfast', status: 'pending' },
+  { time: '8:40 AM–4:10 PM', label: 'College Hours', status: 'pending' },
+  { time: '4:10–5:00 PM', label: 'Tea Break and Relaxation', status: 'pending' },
+  { time: '5:00–8:00 PM', label: 'Build Projects (Frontend/Backend) / AI/ML Project Integration', status: 'pending' },
+  { time: '8:00–8:30 PM', label: 'Dinner & Music (Recharge)', status: 'pending' },
+  { time: '8:30–9:00 PM', label: 'Speech/Presentation Practice (TED-style, Record)', status: 'pending' },
+  { time: '9:00–10:00 PM', label: 'Academics (Assignments, Revision, OS topics, etc.)', status: 'pending' },
+  { time: '10:00–10:30 PM', label: 'Reflection & Daily Log', status: 'pending' },
+  { time: '10:30–11:30 PM', label: 'Work / Movies / Personal Projects / Free Time', status: 'pending' },
+  { time: '11:30 PM', label: 'Sleep', status: 'pending' },
+];
+
 export default function TaskTable() {
   const { currentDate, days, addNote, markBlock } = useTrackerStore();
-  const blocks = days[currentDate]?.blocks || [];
+  const blocks = days[currentDate]?.blocks || defaultBlocks.map(b => ({ ...b }));
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [noteText, setNoteText] = useState('');
 

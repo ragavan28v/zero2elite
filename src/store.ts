@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 export type BlockStatus = 'pending' | 'done' | 'skipped';
 
@@ -17,18 +18,33 @@ export interface DayData {
   journal?: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  startDate: string;
+}
+
 export interface TrackerState {
   currentDate: string;
   days: Record<string, DayData>;
   streak: number;
   eliteScore: number;
   lastStreakDate?: string;
+  challengeStreak: number;
+  lastChallengeDate?: string;
+  currentUser: User | null;
+  startDate: string | null;
   setDate: (date: string) => void;
   markBlock: (blockIdx: number, status: BlockStatus) => void;
   addNote: (blockIdx: number, note: string) => void;
   setJournal: (journal: string) => void;
   resetDay: () => void;
   loadFromFirestore: () => void;
+  awardChallengeXP: (difficulty: string) => void;
+  setCurrentUser: (user: User) => Promise<void>;
+  setStartDate: (date: string) => void;
+  logout: () => void;
 }
 
 const defaultBlocks: Block[] = [
@@ -54,11 +70,13 @@ function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const FIRESTORE_DOC = doc(db, 'trackers', 'main');
+function getUserDoc(userId: string) {
+  return doc(db, 'users', userId);
+}
 
 function getSerializableState(state: TrackerState) {
-  const { currentDate, days, streak, eliteScore, lastStreakDate } = state;
-  return { currentDate, days, streak, eliteScore, lastStreakDate };
+  const { currentDate, days, streak, eliteScore, lastStreakDate, challengeStreak, lastChallengeDate } = state;
+  return { currentDate, days, streak, eliteScore, lastStreakDate, challengeStreak, lastChallengeDate };
 }
 
 // Level system
@@ -160,59 +178,168 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   streak: 0,
   eliteScore: 0,
   lastStreakDate: '',
+  challengeStreak: 0,
+  lastChallengeDate: '',
+  currentUser: null,
+  startDate: null,
   setDate: (date) => {
-    const { days } = get();
+    const { days, currentUser } = get();
+    if (!currentUser) return;
+    
     if (!days[date]) {
       days[date] = { date, blocks: defaultBlocks.map(b => ({ ...b })) };
     }
     const stats = calculateGamifiedStats(days, date);
     set({ currentDate: date, days: { ...days }, ...stats });
-    setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   markBlock: (blockIdx, status) => {
-    const { currentDate, days } = get();
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+    
     const blocks = days[currentDate].blocks.map((b, i) =>
       i === blockIdx ? { ...b, status } : b
     );
     days[currentDate].blocks = blocks;
     const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
-    setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   addNote: (blockIdx, note) => {
-    const { currentDate, days } = get();
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+    
     const blocks = days[currentDate].blocks.map((b, i) =>
       i === blockIdx ? { ...b, note } : b
     );
     days[currentDate].blocks = blocks;
     const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
-    setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   setJournal: (journal) => {
-    const { currentDate, days } = get();
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+    
     days[currentDate].journal = journal;
     const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
-    setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   resetDay: () => {
-    const { currentDate, days } = get();
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+    
     days[currentDate].blocks = defaultBlocks.map(b => ({ ...b }));
     const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
-    setDoc(FIRESTORE_DOC, getSerializableState({ ...get(), ...stats }));
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   loadFromFirestore: async () => {
-    const snap = await getDoc(FIRESTORE_DOC);
+    const { currentUser } = get();
+    if (!currentUser) return;
+    
+    const snap = await getDoc(getUserDoc(currentUser.id));
     if (snap.exists()) {
-      set(snap.data() as any);
+      const data = snap.data() as any;
+      const today = getToday();
+      
+      // Ensure current date has blocks
+      if (!data.days || !data.days[today]) {
+        data.days = {
+          ...data.days,
+          [today]: { 
+            date: today, 
+            blocks: defaultBlocks.map(b => ({ ...b }))
+          }
+        };
+      }
+      
+      set(data);
+    }
+  },
+  awardChallengeXP: (difficulty: string) => {
+    const { eliteScore, currentUser } = get();
+    if (!currentUser) return;
+    
+    let xpAward = 1; // easy
+    if (difficulty === 'medium') xpAward = 2;
+    if (difficulty === 'hard') xpAward = 3;
+    if (difficulty === 'expert') xpAward = 3;
+    if (difficulty === 'schulte') xpAward = 1;
+    if (difficulty === 'memoryPalace') xpAward = 1;
+    if (difficulty === 'patternMatrix') xpAward = 1;
+    
+    const newEliteScore = eliteScore + xpAward;
+    set({ eliteScore: newEliteScore });
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ 
+      ...get(), 
+      eliteScore: newEliteScore
+    }));
+  },
+  setCurrentUser: async (user: User) => {
+    set({ currentUser: user });
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    // Load or create user-specific data when user is set
+    setTimeout(async () => {
+      const state = useTrackerStore.getState();
+      const snap = await getDoc(getUserDoc(user.id));
+      
+      if (snap.exists()) {
+        // User exists, load their data
+        state.loadFromFirestore();
+      } else {
+        // New user, create initial data
+        const today = getToday();
+        const initialState = {
+          currentDate: today,
+          days: {
+            [today]: { 
+              date: today, 
+              blocks: defaultBlocks.map(b => ({ ...b }))
+            }
+          },
+          streak: 0,
+          eliteScore: 0,
+          lastStreakDate: '',
+          challengeStreak: 0,
+          lastChallengeDate: '',
+          currentUser: user,
+          startDate: user.startDate
+        };
+        set(initialState);
+        setDoc(getUserDoc(user.id), getSerializableState({ ...get(), ...initialState }));
+        console.log('Created initial data for new user:', user.id);
+      }
+    }, 100);
+  },
+  setStartDate: (date: string) => {
+    set({ startDate: date });
+    localStorage.setItem('startDate', date);
+  },
+  logout: async () => {
+    try {
+      await signOut(auth);
+      set({ 
+        currentUser: null, 
+        startDate: null,
+        days: {},
+        streak: 0,
+        eliteScore: 0,
+        lastStreakDate: '',
+        challengeStreak: 0,
+        lastChallengeDate: ''
+      });
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('startDate');
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   },
 }));
 
-// On app load, fetch Firestore data
-useTrackerStore.getState().loadFromFirestore();
+// Don't load data on app start - wait for user authentication
 
 // Returns the streak as of a given date (consecutive days up to and including that date that meet the threshold)
 export function getStreakAsOfDate(days: Record<string, DayData>, date: string): number {

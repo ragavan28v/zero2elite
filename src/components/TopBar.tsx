@@ -1,4 +1,5 @@
 import { CalendarDaysIcon } from '@heroicons/react/24/solid';
+import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useTrackerStore, getLevel } from '../store';
 import { useState, useEffect } from 'react';
 
@@ -225,7 +226,7 @@ function AnimatedProtocolHeading() {
 }
 
 export default function TopBar() {
-  const { currentDate, setDate, eliteScore } = useTrackerStore();
+  const { currentDate, setDate, eliteScore, currentUser, logout } = useTrackerStore();
   const [showCal, setShowCal] = useState(false);
   const [lastLevel, setLastLevel] = useState(getLevel(eliteScore).level);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -273,8 +274,26 @@ export default function TopBar() {
         }}>
           <AnimatedProtocolHeading />
         </div>
-        {/* Right: Level Badge Circle */}
-        <LevelBadgeCircle eliteScore={eliteScore} />
+        {/* Right: Level Badge Circle and Logout */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+          <LevelBadgeCircle eliteScore={eliteScore} />
+          {currentUser && (
+            <button 
+              onClick={logout}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                padding: 8, 
+                cursor: 'pointer',
+                borderRadius: 8,
+                transition: 'background-color 0.2s'
+              }}
+              title="Logout"
+            >
+              <ArrowRightOnRectangleIcon style={{ width: 24, height: 24, color: '#dc2626' }} />
+            </button>
+          )}
+        </div>
       </header>
       {showLevelUp && <LevelUpModal level={{ ...level, icon: String(level.icon), title: String(level.title) }} onClose={() => setShowLevelUp(false)} />}
     </>

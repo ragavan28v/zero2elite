@@ -1,0 +1,337 @@
+.container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+.card {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 0.13s, box-shadow 0.13s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titleIcon {
+  color: #00e6ff;
+  font-size: 1.5rem;
+}
+
+.title h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.gameCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 0.13s, box-shadow 0.13s;
+  display: flex;
+  gap: 20px;
+}
+
+.gameCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+
+.leftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 200px;
+  justify-content: center;
+  align-items: center;
+}
+
+.rightPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timerSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.startButton {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+}
+
+.startButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+}
+
+.startButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.timer {
+  background: rgba(255,255,255,0.9);
+  padding: 12px 20px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 2px solid #00e6ff;
+}
+
+.timerIcon {
+  font-size: 1.2rem;
+}
+
+.timerDisplay {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  font-family: 'Courier New', monospace;
+}
+
+.timerLabels {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.timerLabels span {
+  min-width: 20px;
+  text-align: center;
+}
+
+
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.cell {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.cell:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cell.pending {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+
+
+.cell.completed {
+  background: #f3f4f6;
+  color: #d1d5db;
+  border-color: #e5e7eb;
+  opacity: 0.6;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.completionCount {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.completionMessage {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.regenerateButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
+  color: #2196F3;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.regenerateButton:hover {
+  color: #1976D2;
+  background: rgba(33, 150, 243, 0.1);
+  transform: scale(1.1);
+}
+
+.regenerateButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loadingCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 40px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loadingIcon {
+  color: #00e6ff;
+  font-size: 2rem;
+  animation: pulse 2s infinite;
+}
+
+.loadingCard h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.loadingCard p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 8px;
+  }
+  
+  .card {
+    padding: 20px 16px;
+  }
+  
+  .gameCard {
+    padding: 20px 16px;
+  }
+  
+  .cell {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+  
+  .nextNumber {
+    font-size: 1.2rem;
+  }
+} 

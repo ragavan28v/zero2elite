@@ -3,8 +3,15 @@ import TaskTable from './TaskTable';
 import StreakStars from './StreakStars';
 import DailyJournal from './DailyJournal';
 import StatsAchievements from './StatsAchievements';
+import { useTrackerStore } from '../store';
 
 export default function DashboardMain() {
+  const { currentUser } = useTrackerStore();
+
+  // Ensure user is authenticated
+  if (!currentUser) {
+    return null; // AuthGuard will handle this
+  }
   return (
     <div style={{
       display: 'grid',

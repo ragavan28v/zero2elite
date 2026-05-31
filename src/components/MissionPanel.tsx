@@ -1,5 +1,6 @@
 import { FaBrain, FaHammer, FaGlobe, FaCalendarAlt, FaStar, FaBook, FaMicrophone, FaProjectDiagram, FaChartLine, FaBed, FaUtensils, FaDumbbell, FaRegSmile, FaRegEdit, FaMusic, FaTasks, FaRegSun, FaRegListAlt, FaRegPlayCircle } from "react-icons/fa";
 import styles from "./MissionPanel.module.css";
+import { useTrackerStore } from '../store';
 
 const dailyBlocks = [
   { icon: <FaRegSun />, title: "Hydrate + Stretch", time: "5:00–5:15 AM" },
@@ -48,6 +49,13 @@ const outcomes = [
 ];
 
 export default function MissionPanel() {
+  const { currentUser } = useTrackerStore();
+
+  // Ensure user is authenticated
+  if (!currentUser) {
+    return null; // AuthGuard will handle this
+  }
+
   return (
     <div className={styles.missionPanel}>
       <section className={styles.missionBlock}>

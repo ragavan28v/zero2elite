@@ -1,0 +1,1239 @@
+.challengeContainer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 32px auto 0 auto;
+  padding: 0 16px 32px 16px;
+}
+
+.challengeCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 24px;
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.13), 0 1.5px 8px 0 rgba(0,255,255,0.10);
+  padding: 32px 24px;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(24px) saturate(1.2);
+  position: relative;
+}
+
+.challengeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.challengeTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titleIcon {
+  font-size: 2rem;
+  color: #00e6ff;
+  filter: drop-shadow(0 0 10px #00fff7cc);
+}
+
+.challengeTitle h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #222;
+  margin: 0;
+  text-shadow: 0 2px 12px #00fff733;
+}
+
+/* Challenge Navigation */
+.challengeNavigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: #2563eb;
+  font-size: 1.2rem;
+}
+
+.navIcon:hover {
+  background: rgba(0, 230, 255, 0.1);
+  border-color: rgba(0, 230, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 230, 255, 0.2);
+  color: #00e6ff;
+}
+
+.navIcon::before {
+  content: attr(title);
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.navIcon:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.navIcon::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.navIcon:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Memory Palace Builder Styles */
+.gameStateInfo {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.memorizeInfo h4,
+.recallInfo h4,
+.completedInfo h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.memorizeInfo p,
+.recallInfo p,
+.completedInfo p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.startButton {
+  background: linear-gradient(135deg, #00e6ff, #6f00ff);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.startButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 230, 255, 0.3);
+}
+
+.xpAward {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.memoryGridContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.memoryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  max-width: 400px;
+  width: 100%;
+}
+
+.memoryItem {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.memoryItem.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 230, 255, 0.2);
+  border-color: rgba(0, 230, 255, 0.5);
+}
+
+.memoryItem.correct {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+}
+
+.memoryItem.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.itemEmoji {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.itemName {
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.itemLocation {
+  font-size: 0.6rem;
+  color: #666;
+  font-style: italic;
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #22c55e;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+/* Memory Action Buttons */
+.memoryActionButtons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.iconButton svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.iconButton:hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: #00e6ff;
+  transform: translateY(-1px);
+}
+
+.iconButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Simple horizontal action row for bottom controls */
+.actionRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Pattern Recognition Matrix Styles */
+.patternContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.patternGrid {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.patternItem {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  min-width: 60px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.patternItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 230, 255, 0.2);
+}
+
+.answerInput {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  min-width: 60px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.answerInput:focus {
+  border-color: #00e6ff;
+  box-shadow: 0 0 0 3px rgba(0, 230, 255, 0.2);
+}
+
+.answerInput::placeholder {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.patternInfo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.patternInfo p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.submitButton {
+  background: linear-gradient(135deg, #00e6ff, #6f00ff);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 230, 255, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resultsContainer {
+  margin: 20px 0;
+  max-width: 500px;
+  width: 100%;
+}
+
+.resultItem {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.resultSequence {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.resultAnswer {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.resultAnswer .correct {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.resultAnswer .incorrect {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Study Timer Styles */
+.studyInfo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.studyInfo h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #dc2626;
+  animation: pulse 1s infinite;
+}
+
+.studyTimer {
+  margin: 16px 0;
+}
+
+.timerBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(220, 38, 38, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.timerProgress {
+  height: 100%;
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  border-radius: 4px;
+  transition: width 1s linear;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.dayInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dayNumber {
+  background: linear-gradient(135deg, #00e6ff, #6f00ff);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 16px rgba(0,230,255,0.3);
+}
+
+.difficultyBadge {
+  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.challengeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.twisterCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 0.13s, box-shadow 0.13s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.twisterCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+
+.twisterCard h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #222;
+  letter-spacing: 0.01em;
+  text-align: center;
+  width: 100%;
+}
+
+  .twisterText {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  text-align: center;
+  font-style: italic;
+  width: 100%;
+}
+
+  .actionButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+  align-items: center;
+  width: 100%;
+}
+
+  .completeButton, .regenerateButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1.5rem;
+    color: #666;
+    padding: 8px;
+    border-radius: 50%;
+  }
+
+  .completeButton {
+    color: #e5e7eb;
+  }
+
+  .completeButton:hover {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    transform: scale(1.1);
+  }
+
+  .regenerateButton {
+    color: #2196F3;
+    background: rgba(33, 150, 243, 0.1);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .regenerateButton:hover {
+    color: #1976D2;
+    background: rgba(33, 150, 243, 0.2);
+    transform: scale(1.05);
+  }
+
+  .regenerateButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  .loadingIcon {
+    font-size: 2rem;
+    color: #2196F3;
+    margin-bottom: 16px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .completedMessage {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+}
+
+/* Schulte Table Styles */
+.schulteCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 0.13s, box-shadow 0.13s;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.schulteCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+}
+
+.schulteCard h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #222;
+  letter-spacing: 0.01em;
+  text-align: center;
+  width: 100%;
+}
+
+.schulteContent {
+  display: flex;
+  gap: 20px;
+  min-height: 300px;
+  justify-content: center;
+  align-items: center;
+}
+
+.schulteLeftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 200px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 20px;
+}
+
+.schulteRightPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.schulteTimerSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.schulteStartButton {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+}
+
+.schulteStartButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+}
+
+.schulteStartButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.schulteTimer {
+  background: rgba(255,255,255,0.9);
+  padding: 12px 20px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 2px solid #00e6ff;
+}
+
+.schulteTimerIcon {
+  font-size: 1.2rem;
+}
+
+.schulteTimerDisplay {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  font-family: 'Courier New', monospace;
+}
+
+.schulteTimerLabels {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.schulteTimerLabels span {
+  min-width: 20px;
+  text-align: center;
+}
+
+.schulteGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.schulteRow {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.schulteCell {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.schulteCell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.schulteCell:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+.schultePending {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.schulteCompleted {
+  background: #f3f4f6;
+  color: #d1d5db;
+  border-color: #e5e7eb;
+  opacity: 0.6;
+}
+
+.schulteStats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+  width: 100%;
+}
+
+.schulteCompletionCount {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.schulteCompletionMessage {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.schulteActionButtons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.schulteRegenerateButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
+  color: #2196F3;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.schulteRegenerateButton:hover {
+  color: #1976D2;
+  background: rgba(33, 150, 243, 0.1);
+  transform: scale(1.1);
+}
+
+.schulteRegenerateButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Placeholder Challenge Cards */
+.placeholderCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transition: transform 0.13s, box-shadow 0.13s;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.placeholderCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.22);
+  opacity: 0.9;
+}
+
+.placeholderCard h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #222;
+  letter-spacing: 0.01em;
+  text-align: center;
+  width: 100%;
+}
+
+.placeholderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.placeholderIcon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.placeholderContent p {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.placeholderStatus {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(255,152,0,0.3);
+}
+
+.category {
+  font-size: 0.95rem;
+  color: #666;
+  text-align: center;
+  font-weight: 500;
+}
+
+.challengeControls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.controlButtons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.startButton, .completeButton, .tipsButton, .resetButton {
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.startButton {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.startButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+}
+
+
+
+.tipsButton {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+}
+
+.tipsButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(33,150,243,0.4);
+}
+
+.resetButton {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  color: white;
+}
+
+.resetButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(156,39,176,0.4);
+}
+
+.activeChallenge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.timer {
+  background: rgba(255,255,255,0.9);
+  padding: 12px 20px;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 2px solid #00e6ff;
+}
+
+.completedChallenge {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.completionStats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.9);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat svg {
+  color: #00e6ff;
+}
+
+.tipsSection {
+  background: rgba(255,255,255,0.68);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 24px 0 rgba(0,255,255,0.13);
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.tipsSection h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #222;
+}
+
+.tipsSection ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tipsSection li {
+  padding: 8px 0;
+  color: #444;
+  font-size: 1rem;
+  position: relative;
+  padding-left: 20px;
+}
+
+.tipsSection li:before {
+  content: "💡";
+  position: absolute;
+  left: 0;
+  top: 8px;
+}
+
+.ratingSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ratingSection h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 8px;
+}
+
+.starButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #ddd;
+  transition: all 0.2s ease;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.starButton:hover {
+  color: #FFD700;
+  transform: scale(1.1);
+}
+
+.starActive {
+  color: #FFD700;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,255,255,0.2);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.progressItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.progressItem span:first-child {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.scoreValue {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #00e6ff;
+  text-shadow: 0 0 8px #00fff7cc;
+}
+
+.loadingCard {
+  background: rgba(255,255,255,0.68);
+  border-radius: 24px;
+  box-shadow: 0 8px 40px 0 rgba(0,255,255,0.13), 0 1.5px 8px 0 rgba(0,255,255,0.10);
+  padding: 48px 32px;
+  border: 1.8px solid rgba(0,255,255,0.32);
+  backdrop-filter: blur(24px) saturate(1.2);
+  text-align: center;
+}
+
+.loadingIcon {
+  font-size: 3rem;
+  color: #00e6ff;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px #00fff7cc);
+  animation: pulse 2s infinite;
+}
+
+.loadingCard h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.loadingCard p {
+  color: #666;
+  font-size: 1rem;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@media (max-width: 768px) {
+  .challengeContainer {
+    padding: 0 8px 24px 8px;
+  }
+  
+  .challengeCard {
+    padding: 24px 16px;
+  }
+  
+  .challengeHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .controlButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .activeChallenge {
+    flex-direction: column;
+  }
+  
+  .completionStats {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .progressInfo {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .twisterText {
+    font-size: 1.2rem;
+  }
+} 
