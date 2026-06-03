@@ -28,6 +28,7 @@ export interface User {
 export interface TrackerState {
   currentDate: string;
   days: Record<string, DayData>;
+  scheduleTemplate: Block[];
   streak: number;
   eliteScore: number;
   lastStreakDate?: string;
@@ -35,9 +36,20 @@ export interface TrackerState {
   lastChallengeDate?: string;
   currentUser: User | null;
   startDate: string | null;
+  scheduleChoicePending: boolean;
+  templateEditorOpen: boolean;
   setDate: (date: string) => void;
   markBlock: (blockIdx: number, status: BlockStatus) => void;
   addNote: (blockIdx: number, note: string) => void;
+  updateBlock: (blockIdx: number, updates: Partial<Pick<Block, 'time' | 'label' | 'status' | 'note'>>) => void;
+  addBlock: (block?: Partial<Block>) => void;
+  removeBlock: (blockIdx: number) => void;
+  restoreDefaultSchedule: () => void;
+  setScheduleTemplate: (blocks: Block[]) => void;
+  restoreMasterSchedule: () => void;
+  openTemplateEditor: () => void;
+  closeTemplateEditor: () => void;
+  setScheduleChoicePending: (value: boolean) => void;
   setJournal: (journal: string) => void;
   resetDay: () => void;
   loadFromFirestore: () => void;
@@ -47,7 +59,7 @@ export interface TrackerState {
   logout: () => void;
 }
 
-const defaultBlocks: Block[] = [
+export const defaultBlocks: Block[] = [
   { time: '5:00–5:15 AM', label: 'Hydrate + Stretch', status: 'pending' },
   { time: '5:15–5:30 AM', label: 'Breath Meditation', status: 'pending' },
   { time: '5:30–6:00 AM', label: 'Workout', status: 'pending' },
@@ -74,9 +86,43 @@ function getUserDoc(userId: string) {
   return doc(db, 'users', userId);
 }
 
+function createDefaultBlocks(): Block[] {
+  return defaultBlocks.map((block) => ({ ...block }));
+}
+
+function getRequiredTasks(taskCount: number, dayIndex: number): number {
+  const ratio = dayIndex < 31 ? 0.7 : dayIndex < 61 ? 0.8 : 0.85;
+
+  if (taskCount >= 14) {
+    if (dayIndex < 31) return 10;
+    if (dayIndex < 61) return 12;
+    return 14;
+  }
+
+  return Math.max(1, Math.ceil(taskCount * ratio));
+}
+
 function getSerializableState(state: TrackerState) {
-  const { currentDate, days, streak, eliteScore, lastStreakDate, challengeStreak, lastChallengeDate } = state;
-  return { currentDate, days, streak, eliteScore, lastStreakDate, challengeStreak, lastChallengeDate };
+  const {
+    currentDate,
+    days,
+    scheduleTemplate,
+    streak,
+    eliteScore,
+    lastStreakDate,
+    challengeStreak,
+    lastChallengeDate,
+  } = state;
+  return {
+    currentDate,
+    days,
+    scheduleTemplate,
+    streak,
+    eliteScore,
+    lastStreakDate,
+    challengeStreak,
+    lastChallengeDate,
+  };
 }
 
 // Level system
@@ -138,9 +184,7 @@ function calculateGamifiedStats(days: Record<string, DayData>, currentDate: stri
     if (hasJournal) eliteScore += 2;
     // Streak day bonus (for all days that would have counted as a streak day)
     const dayIdx = sortedDates.indexOf(date);
-    let threshold = 10;
-    if (dayIdx >= 31 && dayIdx < 61) threshold = 12;
-    if (dayIdx >= 61) threshold = 14;
+    const threshold = getRequiredTasks(day.blocks.length, dayIdx);
     if (doneCount >= threshold) {
       eliteScore += 5;
     }
@@ -153,9 +197,7 @@ function calculateGamifiedStats(days: Record<string, DayData>, currentDate: stri
     if (date > currentDate) continue;
     const day = days[date];
     const doneCount = day.blocks.filter(b => b.status === 'done').length;
-    let threshold = 10;
-    if (i >= 31 && i < 61) threshold = 12;
-    if (i >= 61) threshold = 14;
+    const threshold = getRequiredTasks(day.blocks.length, i);
     if (doneCount >= threshold && streaking) {
       streak++;
       lastStreakDate = date;
@@ -173,8 +215,9 @@ function calculateGamifiedStats(days: Record<string, DayData>, currentDate: stri
 export const useTrackerStore = create<TrackerState>((set, get) => ({
   currentDate: getToday(),
   days: {
-    [getToday()]: { date: getToday(), blocks: defaultBlocks },
+    [getToday()]: { date: getToday(), blocks: createDefaultBlocks() },
   },
+  scheduleTemplate: createDefaultBlocks(),
   streak: 0,
   eliteScore: 0,
   lastStreakDate: '',
@@ -182,12 +225,14 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   lastChallengeDate: '',
   currentUser: null,
   startDate: null,
+  scheduleChoicePending: false,
+  templateEditorOpen: false,
   setDate: (date) => {
-    const { days, currentUser } = get();
+    const { days, currentUser, scheduleTemplate } = get();
     if (!currentUser) return;
     
     if (!days[date]) {
-      days[date] = { date, blocks: defaultBlocks.map(b => ({ ...b })) };
+      days[date] = { date, blocks: scheduleTemplate.map((block) => ({ ...block })) };
     }
     const stats = calculateGamifiedStats(days, date);
     set({ currentDate: date, days: { ...days }, ...stats });
@@ -217,6 +262,89 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     set({ days: { ...days }, ...stats });
     setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
+  setScheduleTemplate: (blocks) => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    const nextTemplate = blocks.map((block) => ({ ...block }));
+    set({ scheduleTemplate: nextTemplate });
+
+    if (days[currentDate]) {
+      days[currentDate].blocks = nextTemplate.map((block) => ({ ...block }));
+      const stats = calculateGamifiedStats(days, currentDate);
+      set({ days: { ...days }, ...stats });
+      setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), scheduleTemplate: nextTemplate, ...stats }));
+      return;
+    }
+
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), scheduleTemplate: nextTemplate }));
+  },
+  restoreMasterSchedule: () => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    const masterTemplate = createDefaultBlocks();
+    set({ scheduleTemplate: masterTemplate });
+    if (days[currentDate]) {
+      days[currentDate].blocks = masterTemplate.map((block) => ({ ...block }));
+      const stats = calculateGamifiedStats(days, currentDate);
+      set({ days: { ...days }, ...stats });
+      setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), scheduleTemplate: masterTemplate, ...stats }));
+      return;
+    }
+
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), scheduleTemplate: masterTemplate }));
+  },
+  openTemplateEditor: () => set({ templateEditorOpen: true }),
+  closeTemplateEditor: () => set({ templateEditorOpen: false }),
+  setScheduleChoicePending: (value) => set({ scheduleChoicePending: value }),
+  updateBlock: (blockIdx, updates) => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    const blocks = days[currentDate].blocks.map((block, index) =>
+      index === blockIdx ? { ...block, ...updates } : block
+    );
+    days[currentDate].blocks = blocks;
+    const stats = calculateGamifiedStats(days, currentDate);
+    set({ days: { ...days }, ...stats });
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
+  },
+  addBlock: (block = {}) => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    const nextBlock: Block = {
+      time: block.time ?? '12:00 PM',
+      label: block.label ?? 'New custom block',
+      status: block.status ?? 'pending',
+      note: block.note,
+    };
+
+    days[currentDate].blocks = [...days[currentDate].blocks, nextBlock];
+    const stats = calculateGamifiedStats(days, currentDate);
+    set({ days: { ...days }, ...stats });
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
+  },
+  removeBlock: (blockIdx) => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    const nextBlocks = days[currentDate].blocks.filter((_, index) => index !== blockIdx);
+    days[currentDate].blocks = nextBlocks.length > 0 ? nextBlocks : createDefaultBlocks();
+    const stats = calculateGamifiedStats(days, currentDate);
+    set({ days: { ...days }, ...stats });
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
+  },
+  restoreDefaultSchedule: () => {
+    const { currentDate, days, currentUser } = get();
+    if (!currentUser) return;
+
+    days[currentDate].blocks = get().scheduleTemplate.map((block) => ({ ...block }));
+    const stats = calculateGamifiedStats(days, currentDate);
+    set({ days: { ...days }, ...stats });
+    setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
+  },
   setJournal: (journal) => {
     const { currentDate, days, currentUser } = get();
     if (!currentUser) return;
@@ -227,10 +355,10 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
   },
   resetDay: () => {
-    const { currentDate, days, currentUser } = get();
+    const { currentDate, days, currentUser, scheduleTemplate } = get();
     if (!currentUser) return;
     
-    days[currentDate].blocks = defaultBlocks.map(b => ({ ...b }));
+    days[currentDate].blocks = scheduleTemplate.map((block) => ({ ...block }));
     const stats = calculateGamifiedStats(days, currentDate);
     set({ days: { ...days }, ...stats });
     setDoc(getUserDoc(currentUser.id), getSerializableState({ ...get(), ...stats }));
@@ -243,6 +371,9 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     if (snap.exists()) {
       const data = snap.data() as any;
       const today = getToday();
+      const scheduleTemplate = Array.isArray(data.scheduleTemplate) && data.scheduleTemplate.length
+        ? data.scheduleTemplate
+        : createDefaultBlocks();
       
       // Ensure current date has blocks
       if (!data.days || !data.days[today]) {
@@ -250,12 +381,15 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
           ...data.days,
           [today]: { 
             date: today, 
-            blocks: defaultBlocks.map(b => ({ ...b }))
+            blocks: scheduleTemplate.map((block: Block) => ({ ...block }))
           }
         };
       }
       
-      set(data);
+      set({
+        ...data,
+        scheduleTemplate: scheduleTemplate.map((block: Block) => ({ ...block })),
+      });
     }
   },
   awardChallengeXP: (difficulty: string) => {
@@ -278,7 +412,7 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     }));
   },
   setCurrentUser: async (user: User) => {
-    set({ currentUser: user });
+    set({ currentUser: user, scheduleChoicePending: false, templateEditorOpen: false });
     localStorage.setItem('currentUser', JSON.stringify(user));
     
     // Load or create user-specific data when user is set
@@ -297,9 +431,10 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
           days: {
             [today]: { 
               date: today, 
-              blocks: defaultBlocks.map(b => ({ ...b }))
+              blocks: createDefaultBlocks()
             }
           },
+          scheduleTemplate: createDefaultBlocks(),
           streak: 0,
           eliteScore: 0,
           lastStreakDate: '',
@@ -324,7 +459,10 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
       set({ 
         currentUser: null, 
         startDate: null,
+        scheduleChoicePending: false,
+        templateEditorOpen: false,
         days: {},
+        scheduleTemplate: createDefaultBlocks(),
         streak: 0,
         eliteScore: 0,
         lastStreakDate: '',
@@ -350,9 +488,7 @@ export function getStreakAsOfDate(days: Record<string, DayData>, date: string): 
     const d = sortedDates[i];
     const day = days[d];
     const doneCount = day.blocks.filter(b => b.status === 'done').length;
-    let threshold = 10;
-    if (i >= 31 && i < 61) threshold = 12;
-    if (i >= 61) threshold = 14;
+    const threshold = getRequiredTasks(day.blocks.length, i);
     if (doneCount >= threshold && streaking) {
       streak++;
     } else {

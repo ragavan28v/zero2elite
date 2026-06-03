@@ -1,38 +1,56 @@
-import { useTrackerStore } from '../store';
-import { CheckCircleIcon, XCircleIcon, MinusCircleIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
-import { useState } from 'react';
+import {
+  ArrowPathIcon,
+  CheckCircleIcon,
+  PencilSquareIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  XCircleIcon,
+  MinusCircleIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/solid';
+import { useEffect, useState } from 'react';
+import { defaultBlocks, type Block, useTrackerStore } from '../store';
 
-// Import defaultBlocks from store
-const defaultBlocks = [
-  { time: '5:00–5:15 AM', label: 'Hydrate + Stretch', status: 'pending' },
-  { time: '5:15–5:30 AM', label: 'Breath Meditation', status: 'pending' },
-  { time: '5:30–6:00 AM', label: 'Workout', status: 'pending' },
-  { time: '6:00–6:30 AM', label: 'Shower and Get Ready', status: 'pending' },
-  { time: '6:30–7:30 AM', label: 'Book Reading (1 Chapter)', status: 'pending' },
-  { time: '7:30–8:20 AM', label: 'AI/ML Study, Micro Blog, Tech Trends, Podcast Walk, Voice Practice', status: 'pending' },
-  { time: '8:20–8:40 AM', label: 'Healthy Breakfast', status: 'pending' },
-  { time: '8:40 AM–4:10 PM', label: 'College Hours', status: 'pending' },
-  { time: '4:10–5:00 PM', label: 'Tea Break and Relaxation', status: 'pending' },
-  { time: '5:00–8:00 PM', label: 'Build Projects (Frontend/Backend) / AI/ML Project Integration', status: 'pending' },
-  { time: '8:00–8:30 PM', label: 'Dinner & Music (Recharge)', status: 'pending' },
-  { time: '8:30–9:00 PM', label: 'Speech/Presentation Practice (TED-style, Record)', status: 'pending' },
-  { time: '9:00–10:00 PM', label: 'Academics (Assignments, Revision, OS topics, etc.)', status: 'pending' },
-  { time: '10:00–10:30 PM', label: 'Reflection & Daily Log', status: 'pending' },
-  { time: '10:30–11:30 PM', label: 'Work / Movies / Personal Projects / Free Time', status: 'pending' },
-  { time: '11:30 PM', label: 'Sleep', status: 'pending' },
-];
+function cloneDefaultBlocks() {
+  return defaultBlocks.map((block) => ({ ...block }));
+}
 
 export default function TaskTable() {
-  const { currentDate, days, addNote, markBlock } = useTrackerStore();
-  const blocks = days[currentDate]?.blocks || defaultBlocks.map(b => ({ ...b }));
+  const {
+    currentDate,
+    days,
+    scheduleTemplate,
+    addNote,
+    markBlock,
+    updateBlock,
+    addBlock,
+    removeBlock,
+    restoreDefaultSchedule,
+    setScheduleTemplate,
+    restoreMasterSchedule,
+    templateEditorOpen,
+    openTemplateEditor,
+    closeTemplateEditor,
+  } = useTrackerStore();
+
+  const blocks = days[currentDate]?.blocks || cloneDefaultBlocks();
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [templateDraft, setTemplateDraft] = useState<Block[]>(cloneDefaultBlocks());
 
-  const handleEdit = (idx: number, note: string | undefined) => {
+  useEffect(() => {
+    if (templateEditorOpen) {
+      setTemplateDraft(scheduleTemplate.map((block) => ({ ...block })));
+    }
+  }, [scheduleTemplate, templateEditorOpen]);
+
+  const handleEditNote = (idx: number, note: string | undefined) => {
     setEditingIdx(idx);
     setNoteText(note || '');
   };
-  const handleSave = () => {
+
+  const handleSaveNote = () => {
     if (editingIdx !== null) {
       addNote(editingIdx, noteText);
       setEditingIdx(null);
@@ -40,24 +58,235 @@ export default function TaskTable() {
     }
   };
 
+  const handleResetSchedule = () => {
+    restoreDefaultSchedule();
+    setEditingIdx(null);
+    setNoteText('');
+    setIsCustomizing(false);
+  };
+
+  const handleAddBlock = () => {
+    addBlock({
+      time: '12:00 PM',
+      label: 'New custom block',
+      status: 'pending',
+    });
+    setIsCustomizing(true);
+  };
+
+  const handleUpdateField = (idx: number, field: 'time' | 'label', value: string) => {
+    updateBlock(idx, { [field]: value });
+  };
+
+  const handleRemoveBlock = (idx: number) => {
+    removeBlock(idx);
+    if (editingIdx === idx) {
+      setEditingIdx(null);
+      setNoteText('');
+    }
+  };
+
+  const handleTemplateField = (idx: number, field: 'time' | 'label', value: string) => {
+    setTemplateDraft((prev) =>
+      prev.map((block, index) => (index === idx ? { ...block, [field]: value } : block)),
+    );
+  };
+
+  const handleTemplateAdd = () => {
+    setTemplateDraft((prev) => [
+      ...prev,
+      { time: '12:00 PM', label: 'New template block', status: 'pending' },
+    ]);
+  };
+
+  const handleTemplateRemove = (idx: number) => {
+    setTemplateDraft((prev) => {
+      const next = prev.filter((_, index) => index !== idx);
+      return next.length > 0 ? next : cloneDefaultBlocks();
+    });
+  };
+
+  const handleTemplateSave = () => {
+    const nextTemplate = templateDraft.map((block) => ({ ...block, status: 'pending' as const }));
+    setScheduleTemplate(nextTemplate);
+    restoreDefaultSchedule();
+    closeTemplateEditor();
+  };
+
+  const handleTemplateReset = () => {
+    const master = cloneDefaultBlocks();
+    setTemplateDraft(master);
+    restoreMasterSchedule();
+  };
+
   return (
     <div style={{ width: '100%' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 12,
+          padding: '10px 12px',
+          borderRadius: 14,
+          background: 'rgba(255,255,255,0.72)',
+          border: '1px solid rgba(37, 99, 235, 0.12)',
+          backdropFilter: 'blur(10px)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <SparklesIcon style={{ width: 18, height: 18, color: '#2563eb' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Daily schedule</span>
+            <span style={{ fontSize: 12, color: '#6b7280' }}>
+              Default plan stays intact. Custom edits save to the current day.
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setIsCustomizing((value) => !value)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: 10,
+              border: '1px solid rgba(37, 99, 235, 0.18)',
+              background: isCustomizing ? '#2563eb' : '#fff',
+              color: isCustomizing ? '#fff' : '#2563eb',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <PencilSquareIcon style={{ width: 16, height: 16 }} />
+            {isCustomizing ? 'Done editing' : 'Customize schedule'}
+          </button>
+
+          <button
+            onClick={openTemplateEditor}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: 10,
+              border: '1px solid rgba(124, 58, 237, 0.18)',
+              background: '#faf5ff',
+              color: '#7c3aed',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <SparklesIcon style={{ width: 16, height: 16 }} />
+            Edit template
+          </button>
+
+          {isCustomizing && (
+            <>
+              <button
+                onClick={handleAddBlock}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(34, 197, 94, 0.18)',
+                  background: '#f0fdf4',
+                color: '#16a34a',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+              >
+                <PlusCircleIcon style={{ width: 16, height: 16 }} />
+                Add block
+              </button>
+
+              <button
+                onClick={handleResetSchedule}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(239, 68, 68, 0.18)',
+                  background: '#fff1f2',
+                  color: '#dc2626',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <ArrowPathIcon style={{ width: 16, height: 16 }} />
+                Restore template
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
         <thead>
           <tr style={{ color: '#888', fontWeight: 500 }}>
-            <th style={{ textAlign: 'left', padding: '4px 8px' }}>Time</th>
-            <th style={{ textAlign: 'left', padding: '4px 8px' }}>Task</th>
-            <th style={{ textAlign: 'center', padding: '4px 8px' }}>Status</th>
-            <th style={{ textAlign: 'center', padding: '4px 8px' }}>Note</th>
+            <th style={{ textAlign: 'left', padding: '4px 8px', width: '16%' }}>Time</th>
+            <th style={{ textAlign: 'left', padding: '4px 8px', width: '48%' }}>Task</th>
+            <th style={{ textAlign: 'center', padding: '4px 8px', width: '16%' }}>Status</th>
+            <th style={{ textAlign: 'center', padding: '4px 8px', width: '20%' }}>Note</th>
           </tr>
         </thead>
         <tbody>
           {blocks.map((block, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-              <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>{block.time}</td>
-              <td style={{ padding: '4px 8px', color: '#222' }}>{block.label}</td>
+            <tr key={`${currentDate}-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>
+                {isCustomizing ? (
+                  <input
+                    value={block.time}
+                    onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
+                    style={{
+                      width: '100%',
+                      fontSize: 12,
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      border: '1px solid #e5e7eb',
+                      outline: 'none',
+                      color: '#2563eb',
+                      fontWeight: 600,
+                    }}
+                  />
+                ) : (
+                  block.time
+                )}
+              </td>
+              <td style={{ padding: '4px 8px', color: '#222' }}>
+                {isCustomizing ? (
+                  <input
+                    value={block.label}
+                    onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
+                    style={{
+                      width: '100%',
+                      fontSize: 12,
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      border: '1px solid #e5e7eb',
+                      outline: 'none',
+                      color: '#111827',
+                      fontWeight: 500,
+                    }}
+                  />
+                ) : (
+                  block.label
+                )}
+              </td>
               <td style={{ textAlign: 'center', padding: '4px 8px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <button
                     onClick={() => markBlock(i, block.status === 'done' ? 'pending' : 'done')}
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -81,23 +310,69 @@ export default function TaskTable() {
                   </button>
                 </span>
               </td>
-              <td style={{ textAlign: 'center', padding: '4px 8px', minWidth: 80 }}>
+              <td style={{ textAlign: 'center', padding: '4px 8px', minWidth: 120 }}>
                 {editingIdx === i ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
                       value={noteText}
-                      onChange={e => setNoteText(e.target.value)}
-                      style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, border: '1px solid #e5e7eb', width: 80 }}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      style={{
+                        fontSize: 12,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        border: '1px solid #e5e7eb',
+                        width: 80,
+                      }}
                       autoFocus
                     />
-                    <button onClick={handleSave} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>Save</button>
+                    <button
+                      onClick={handleSaveNote}
+                      style={{
+                        fontSize: 12,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        border: 'none',
+                        background: '#2563eb',
+                        color: '#fff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Save
+                    </button>
                   </span>
                 ) : (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {block.note && <span style={{ color: '#2563eb', fontSize: 12, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{block.note}</span>}
-                    <button onClick={() => handleEdit(i, block.note)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }} title="Add note">
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
+                    {block.note && (
+                      <span
+                        style={{
+                          color: '#2563eb',
+                          fontSize: 12,
+                          maxWidth: 88,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title={block.note}
+                      >
+                        {block.note}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleEditNote(i, block.note)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      title="Add note"
+                    >
                       <PencilSquareIcon style={{ width: 16, height: 16, color: '#888' }} />
                     </button>
+                    {isCustomizing && (
+                      <button
+                        onClick={() => handleRemoveBlock(i)}
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                        title="Remove block"
+                      >
+                        <TrashIcon style={{ width: 16, height: 16, color: '#dc2626' }} />
+                      </button>
+                    )}
                   </span>
                 )}
               </td>
@@ -105,6 +380,221 @@ export default function TaskTable() {
           ))}
         </tbody>
       </table>
+
+      {isCustomizing && (
+        <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
+          Edit the timing and task title inline. Notes and status still work the same way, so the layout stays familiar while the schedule becomes yours.
+        </div>
+      )}
+
+      {templateEditorOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.42)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 2500,
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 'min(1100px, 100%)',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
+              borderRadius: 24,
+              border: '1px solid rgba(37, 99, 235, 0.14)',
+              boxShadow: '0 30px 80px rgba(15, 23, 42, 0.24)',
+              padding: 24,
+              display: 'grid',
+              gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, color: '#7c3aed', textTransform: 'uppercase' }}>
+                  Personal template
+                </div>
+                <h3 style={{ margin: '6px 0 6px 0', fontSize: '1.4rem', color: '#111827' }}>
+                  Shape the baseline your days will return to
+                </h3>
+                <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.6 }}>
+                  This becomes your own default schedule. Day-level edits can still override a single day, and restore will bring you back here.
+                </p>
+              </div>
+
+              <button
+                onClick={closeTemplateEditor}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#6b7280',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: 8,
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={handleTemplateAdd}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(34, 197, 94, 0.18)',
+                  background: '#f0fdf4',
+                  color: '#16a34a',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <PlusCircleIcon style={{ width: 16, height: 16 }} />
+                Add template block
+              </button>
+
+              <button
+                onClick={handleTemplateReset}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(239, 68, 68, 0.18)',
+                  background: '#fff1f2',
+                  color: '#dc2626',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <ArrowPathIcon style={{ width: 16, height: 16 }} />
+                Reset to master plan
+              </button>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
+                <thead>
+                  <tr style={{ color: '#888', fontWeight: 500 }}>
+                    <th style={{ textAlign: 'left', padding: '4px 8px', width: '18%' }}>Time</th>
+                    <th style={{ textAlign: 'left', padding: '4px 8px', width: '48%' }}>Task</th>
+                    <th style={{ textAlign: 'center', padding: '4px 8px', width: '14%' }}>Status</th>
+                    <th style={{ textAlign: 'center', padding: '4px 8px', width: '20%' }}>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {templateDraft.map((block, i) => (
+                    <tr key={`template-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                      <td style={{ padding: '4px 8px' }}>
+                        <input
+                          value={block.time}
+                          onChange={(e) => handleTemplateField(i, 'time', e.target.value)}
+                          style={{
+                            width: '100%',
+                            fontSize: 12,
+                            padding: '6px 8px',
+                            borderRadius: 8,
+                            border: '1px solid #e5e7eb',
+                            outline: 'none',
+                            color: '#2563eb',
+                            fontWeight: 600,
+                          }}
+                        />
+                      </td>
+                      <td style={{ padding: '4px 8px' }}>
+                        <input
+                          value={block.label}
+                          onChange={(e) => handleTemplateField(i, 'label', e.target.value)}
+                          style={{
+                            width: '100%',
+                            fontSize: 12,
+                            padding: '6px 8px',
+                            borderRadius: 8,
+                            border: '1px solid #e5e7eb',
+                            outline: 'none',
+                            color: '#111827',
+                            fontWeight: 500,
+                          }}
+                        />
+                      </td>
+                      <td style={{ textAlign: 'center', padding: '4px 8px' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 10px',
+                            borderRadius: 999,
+                            background: 'rgba(37, 99, 235, 0.08)',
+                            color: '#2563eb',
+                            fontWeight: 700,
+                            fontSize: 12,
+                          }}
+                        >
+                          Pending
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center', padding: '4px 8px' }}>
+                        <button
+                          onClick={() => handleTemplateRemove(i)}
+                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                          title="Remove template block"
+                        >
+                          <TrashIcon style={{ width: 16, height: 16, color: '#dc2626' }} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={closeTemplateEditor}
+                style={{
+                  border: '1px solid rgba(107,114,128,0.18)',
+                  background: '#fff',
+                  color: '#374151',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTemplateSave}
+                style={{
+                  border: 'none',
+                  background: '#2563eb',
+                  color: '#fff',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 12px 24px rgba(37,99,235,0.22)',
+                }}
+              >
+                Save template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

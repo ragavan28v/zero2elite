@@ -12,7 +12,7 @@ interface AuthForm {
 }
 
 export default function LandingPage() {
-  const { setCurrentUser, setStartDate } = useTrackerStore();
+  const { setCurrentUser, setStartDate, setScheduleChoicePending } = useTrackerStore();
   const [isLogin, setIsLogin] = useState<boolean | null>(null);
   const [formData, setFormData] = useState<AuthForm>({
     email: '',
@@ -48,6 +48,7 @@ export default function LandingPage() {
         };
         await setCurrentUser(user);
         setStartDate(user.startDate);
+        setScheduleChoicePending(true);
       }
       setIsLoading(false);
       setIsLogin(null);
