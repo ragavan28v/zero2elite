@@ -291,18 +291,6 @@ export default function LandingPage() {
         {/* Right Column: Embedded Form Blending into Surface */}
         <div className={styles.rightColumn}>
           <div className={styles.embeddedAuthContainer}>
-            {(authError || authSuccess) && (
-              <div className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup}`}>
-                <button
-                  type="button"
-                  className={styles.popupCloseButton}
-                  onClick={resetAuthFeedback}
-                >
-                  <FaTimes />
-                </button>
-                <p>{authError || authSuccess}</p>
-              </div>
-            )}
             {isLogin ? (
               <form onSubmit={isPasswordReset ? handlePasswordReset : handleSubmit} className={styles.authForm}>
                 <h3>{isPasswordReset ? 'Reset Password' : 'Welcome Back'}</h3>
@@ -490,6 +478,20 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      {/* Feedback Popup - Fixed Position */}
+      {(authError || authSuccess) && (
+        <div className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup}`}>
+          <button
+            type="button"
+            className={styles.popupCloseButton}
+            onClick={resetAuthFeedback}
+          >
+            <FaTimes />
+          </button>
+          <p>{authError || authSuccess}</p>
+        </div>
+      )}
     </div>
   );
 } 

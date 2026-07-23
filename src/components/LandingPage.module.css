@@ -159,7 +159,6 @@
   overflow-y: auto;
   position: relative;
   padding-top: 0;
-  overflow: visible;
 }
 
 @keyframes fadeIn {
@@ -363,13 +362,13 @@
 }
 
 .feedbackPopup {
-  position: absolute;
-  top: -60px;
-  left: 0;
-  right: 0;
-  width: 100%;
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 616px;
   padding: 10px 12px;
-  padding-right: calc(12px + 4px);
   border-radius: 10px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -380,7 +379,7 @@
   border: 1.5px solid;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   animation: popIn 0.3s ease-out;
-  z-index: 1010;
+  z-index: 9999;
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -430,11 +429,11 @@
 @keyframes popIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateX(-50%) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(-50%) scale(1);
   }
 }
 
