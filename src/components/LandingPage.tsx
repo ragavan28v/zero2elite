@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaBrain, FaTrophy, FaChartLine, FaUsers, FaEnvelope, FaLock, FaUser, FaGoogle, FaTimes } from 'react-icons/fa';
 import { useTrackerStore } from '../store';
 import { auth } from '../firebase';
@@ -21,6 +21,7 @@ interface AuthForm {
 }
 
 export default function LandingPage() {
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const { 
     setCurrentUser, 
     setStartDate, 
@@ -42,6 +43,12 @@ export default function LandingPage() {
   const resetAuthFeedback = () => {
     setAuthError(null);
     setAuthSuccess(null);
+  };
+
+  const scrollToForm = () => {
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   useEffect(() => {
@@ -212,6 +219,7 @@ export default function LandingPage() {
               setIsLogin(true);
               setIsPasswordReset(false);
               resetAuthFeedback();
+              scrollToForm();
             }}
             className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
           >
@@ -222,6 +230,7 @@ export default function LandingPage() {
               setIsLogin(false);
               setIsPasswordReset(false);
               resetAuthFeedback();
+              scrollToForm();
             }}
             className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
           >
@@ -289,7 +298,7 @@ export default function LandingPage() {
         </div>
 
         {/* Right Column: Embedded Form Blending into Surface */}
-        <div className={styles.rightColumn}>
+        <div className={styles.rightColumn} ref={formContainerRef}>
           <div className={styles.embeddedAuthContainer}>
             {isLogin ? (
               <form onSubmit={isPasswordReset ? handlePasswordReset : handleSubmit} className={styles.authForm}>
