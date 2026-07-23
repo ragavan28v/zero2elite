@@ -38,6 +38,8 @@ export interface TrackerState {
   startDate: string | null;
   scheduleChoicePending: boolean;
   templateEditorOpen: boolean;
+  authError: string | null;
+  authSuccess: string | null;
   setDate: (date: string) => void;
   markBlock: (blockIdx: number, status: BlockStatus) => void;
   addNote: (blockIdx: number, note: string) => void;
@@ -54,8 +56,10 @@ export interface TrackerState {
   resetDay: () => void;
   loadFromFirestore: () => void;
   awardChallengeXP: (difficulty: string) => void;
-  setCurrentUser: (user: User) => Promise<void>;
+  setCurrentUser: (user: User, isSignUp?: boolean) => Promise<void>;
   setStartDate: (date: string) => void;
+  setAuthError: (val: string | null) => void;
+  setAuthSuccess: (val: string | null) => void;
   logout: () => void;
 }
 
@@ -112,6 +116,7 @@ function getSerializableState(state: TrackerState) {
     lastStreakDate,
     challengeStreak,
     lastChallengeDate,
+    scheduleChoicePending,
   } = state;
   return {
     currentDate,
@@ -122,6 +127,7 @@ function getSerializableState(state: TrackerState) {
     lastStreakDate,
     challengeStreak,
     lastChallengeDate,
+    scheduleChoicePending,
   };
 }
 
@@ -227,6 +233,10 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   startDate: null,
   scheduleChoicePending: false,
   templateEditorOpen: false,
+  authError: null,
+  authSuccess: null,
+  setAuthError: (val) => set({ authError: val }),
+  setAuthSuccess: (val) => set({ authSuccess: val }),
   setDate: (date) => {
     const { days, currentUser, scheduleTemplate } = get();
     if (!currentUser) return;
@@ -297,7 +307,13 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   },
   openTemplateEditor: () => set({ templateEditorOpen: true }),
   closeTemplateEditor: () => set({ templateEditorOpen: false }),
-  setScheduleChoicePending: (value) => set({ scheduleChoicePending: value }),
+  setScheduleChoicePending: (value) => {
+    set({ scheduleChoicePending: value });
+    const { currentUser } = get();
+    if (currentUser) {
+      setDoc(getUserDoc(currentUser.id), getSerializableState(get()));
+    }
+  },
   updateBlock: (blockIdx, updates) => {
     const { currentDate, days, currentUser } = get();
     if (!currentUser) return;
@@ -389,6 +405,7 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
       set({
         ...data,
         scheduleTemplate: scheduleTemplate.map((block: Block) => ({ ...block })),
+        scheduleChoicePending: data.scheduleChoicePending ?? false
       });
     }
   },
@@ -411,19 +428,31 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
       eliteScore: newEliteScore
     }));
   },
-  setCurrentUser: async (user: User) => {
-    set({ currentUser: user, scheduleChoicePending: false, templateEditorOpen: false });
+  setCurrentUser: async (user: User, isSignUp?: boolean) => {
+    set({ currentUser: user, templateEditorOpen: false });
     localStorage.setItem('currentUser', JSON.stringify(user));
     
     // Load or create user-specific data when user is set
     setTimeout(async () => {
       const state = useTrackerStore.getState();
-      const snap = await getDoc(getUserDoc(user.id));
       
-      if (snap.exists()) {
-        // User exists, load their data
-        state.loadFromFirestore();
-      } else {
+      let exists = false;
+      try {
+        const snap = await getDoc(getUserDoc(user.id));
+        exists = snap.exists();
+        if (exists) {
+          state.loadFromFirestore();
+        }
+      } catch (err: any) {
+        console.warn('Store init: Firestore read check failed (possible rules denial on non-existent doc):', err);
+        if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+          exists = false;
+        } else {
+          console.error('Firestore critical read error:', err);
+        }
+      }
+      
+      if (!exists) {
         // New user, create initial data
         const today = getToday();
         const initialState = {
@@ -441,7 +470,8 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
           challengeStreak: 0,
           lastChallengeDate: '',
           currentUser: user,
-          startDate: user.startDate
+          startDate: user.startDate,
+          scheduleChoicePending: !!isSignUp
         };
         set(initialState);
         setDoc(getUserDoc(user.id), getSerializableState({ ...get(), ...initialState }));
@@ -467,7 +497,9 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
         eliteScore: 0,
         lastStreakDate: '',
         challengeStreak: 0,
-        lastChallengeDate: ''
+        lastChallengeDate: '',
+        authError: null,
+        authSuccess: null
       });
       localStorage.removeItem('currentUser');
       localStorage.removeItem('startDate');

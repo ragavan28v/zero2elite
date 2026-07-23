@@ -1,8 +1,17 @@
-import { useState } from 'react';
-import { FaBrain, FaTrophy, FaChartLine, FaUsers } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaBrain, FaTrophy, FaChartLine, FaUsers, FaEnvelope, FaLock, FaUser, FaGoogle, FaTimes } from 'react-icons/fa';
 import { useTrackerStore } from '../store';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+  signOut,
+  getAdditionalUserInfo,
+} from 'firebase/auth';
 import styles from './LandingPage.module.css';
 
 interface AuthForm {
@@ -12,22 +21,47 @@ interface AuthForm {
 }
 
 export default function LandingPage() {
-  const { setCurrentUser, setStartDate, setScheduleChoicePending } = useTrackerStore();
-  const [isLogin, setIsLogin] = useState<boolean | null>(null);
+  const { 
+    setCurrentUser, 
+    setStartDate, 
+    authError,
+    authSuccess,
+    setAuthError,
+    setAuthSuccess
+  } = useTrackerStore();
+
+  const [isLogin, setIsLogin] = useState<boolean>(true);
   const [formData, setFormData] = useState<AuthForm>({
     email: '',
     password: '',
     name: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+
+  const resetAuthFeedback = () => {
+    setAuthError(null);
+    setAuthSuccess(null);
+  };
+
+  useEffect(() => {
+    if (authError || authSuccess) {
+      const timer = setTimeout(() => {
+        resetAuthFeedback();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [authError, authSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    resetAuthFeedback();
     setIsLoading(true);
+    localStorage.setItem('auth_action', isLogin ? 'signin' : 'signup');
 
     try {
       if (isLogin) {
-        // Sign In
+        // Email Sign In: Firebase Auth naturally throws user-not-found for unregistered accounts
         const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
         const user = {
           id: userCredential.user.uid,
@@ -35,26 +69,28 @@ export default function LandingPage() {
           name: userCredential.user.displayName || 'User',
           startDate: new Date().toISOString().split('T')[0]
         };
-        await setCurrentUser(user);
+        await setCurrentUser(user, false);
         setStartDate(user.startDate);
       } else {
-        // Sign Up
+        // Email Sign Up: Create a new account
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        await updateProfile(userCredential.user, { displayName: formData.name || 'User' });
         const user = {
           id: userCredential.user.uid,
           email: userCredential.user.email!,
           name: formData.name || 'User',
           startDate: new Date().toISOString().split('T')[0]
         };
-        await setCurrentUser(user);
+        await setCurrentUser(user, true);
         setStartDate(user.startDate);
-        setScheduleChoicePending(true);
       }
       setIsLoading(false);
-      setIsLogin(null);
+      setIsPasswordReset(false);
+      localStorage.removeItem('auth_action');
     } catch (error: any) {
       console.error('Authentication error:', error);
-      
+      localStorage.removeItem('auth_action');
+
       let errorMessage = 'Authentication failed';
       if (error.code === 'auth/invalid-credential') {
         errorMessage = 'Invalid email or password. Please check your credentials or create a new account.';
@@ -71,8 +107,79 @@ export default function LandingPage() {
       } else {
         errorMessage = error.message || 'Authentication failed';
       }
-      
-      alert(errorMessage);
+
+      setAuthError(errorMessage);
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    resetAuthFeedback();
+    setIsLoading(true);
+    localStorage.setItem('auth_action', isLogin ? 'signin' : 'signup');
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
+
+      if (isLogin) {
+        // Sign In Mode: Block if this is a brand new account (unregistered)
+        if (isNewUser) {
+          await result.user.delete();
+          await signOut(auth);
+          useTrackerStore.getState().logout();
+          setAuthError('No account found with this Google account. Please sign up first.');
+          localStorage.removeItem('auth_action');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const user = {
+        id: result.user.uid,
+        email: result.user.email!,
+        name: result.user.displayName || 'User',
+        startDate: new Date().toISOString().split('T')[0]
+      };
+
+      await setCurrentUser(user, !isLogin && isNewUser);
+      setStartDate(user.startDate);
+      localStorage.removeItem('auth_action');
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      localStorage.removeItem('auth_action');
+      if (error.code !== 'auth/popup-closed-by-user') {
+        const errorMessage = error.message || 'Google sign-in failed.';
+        setAuthError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    resetAuthFeedback();
+
+    if (!formData.email.trim()) {
+      setAuthError('Please enter your email address so we can send a reset link.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await sendPasswordResetEmail(auth, formData.email.trim());
+      setAuthSuccess('Password reset link sent. Please check your inbox and spam folder.');
+      setIsPasswordReset(false);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      const errorMessage = error.code === 'auth/user-not-found'
+        ? 'No account exists for that email yet.'
+        : error.message || 'Unable to send a password reset email.';
+      setAuthError(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -88,12 +195,9 @@ export default function LandingPage() {
     <div className={styles.landingContainer}>
       {/* Background Elements */}
       <div className={styles.backgroundElements}>
-        <div className={styles.floatingBrain}>🧠</div>
-        <div className={styles.floatingRocket}>🚀</div>
-        <div className={styles.floatingTrophy}>🏆</div>
-        <div className={styles.floatingChart}>📈</div>
-        <div className={styles.floatingLightbulb}>💡</div>
-        <div className={styles.floatingUsers}>👥</div>
+        <div className={styles.orb1}></div>
+        <div className={styles.orb2}></div>
+        <div className={styles.orb3}></div>
       </div>
 
       {/* Top Navigation */}
@@ -104,53 +208,133 @@ export default function LandingPage() {
         </div>
         <div className={styles.authButtons}>
           <button 
-            onClick={() => setIsLogin(true)}
-            className={styles.authButton}
+            onClick={() => {
+              setIsLogin(true);
+              setIsPasswordReset(false);
+              resetAuthFeedback();
+            }}
+            className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
           >
             Sign In
           </button>
           <button 
-            onClick={() => setIsLogin(false)}
-            className={styles.authButton}
+            onClick={() => {
+              setIsLogin(false);
+              setIsPasswordReset(false);
+              resetAuthFeedback();
+            }}
+            className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
           >
             Sign Up
           </button>
         </div>
       </div>
 
-      {/* Auth Forms Overlay */}
-      {isLogin !== null && (
-        <div className={styles.authOverlay}>
-          <div className={styles.authCard}>
-            <button 
-              onClick={() => setIsLogin(null)}
-              className={styles.closeButton}
-            >
-              ×
-            </button>
-            {isLogin && (
-              <form onSubmit={handleSubmit} className={styles.authForm}>
-                <h3>Welcome Back</h3>
+      {/* Main Content Layout (Non-Scrollable Viewport Split Grid) */}
+      <div className={styles.mainContent}>
+        {/* Left Column: Hero Details & Upfront Features */}
+        <div className={styles.leftColumn}>
+          <div className={styles.heroContent}>
+            <div className={styles.heroBadgeContainer}>
+              <div className={styles.heroBadge}>
+                <span>✨ Cognitive Evolution Platform</span>
+              </div>
+              <div className={styles.badgeUnderline}></div>
+            </div>
+            <p className={styles.heroSubtitle}>
+              Daily mental training challenges designed to elevate your cognitive baseline.
+            </p>
+
+            <div className={styles.featuresAndStatsContainer}>
+              <div className={styles.coreFeaturesList}>
+                <div className={styles.featureItem}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText}>
+                    <h3>Adaptive Training</h3>
+                    <p>Challenges tailored to your performance.</p>
+                  </div>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText}>
+                    <h3>Growth Analytics</h3>
+                    <p>Detailed mapping of cognitive progress.</p>
+                  </div>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText}>
+                    <h3>Elite Recognition</h3>
+                    <p>Benchmarking against peak capabilities.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.verticalStatsList}>
+                <div className={styles.statItem}>
+                  <FaTrophy />
+                  <span>10+ Challenges</span>
+                </div>
+                <div className={styles.statItem}>
+                  <FaChartLine />
+                  <span>Track Progress</span>
+                </div>
+                <div className={styles.statItem}>
+                  <FaUsers />
+                  <span>Join Community</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Embedded Form Blending into Surface */}
+        <div className={styles.rightColumn}>
+          <div className={styles.embeddedAuthContainer}>
+            {(authError || authSuccess) && (
+              <div className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup}`}>
+                <button
+                  type="button"
+                  className={styles.popupCloseButton}
+                  onClick={resetAuthFeedback}
+                >
+                  <FaTimes />
+                </button>
+                <p>{authError || authSuccess}</p>
+              </div>
+            )}
+            {isLogin ? (
+              <form onSubmit={isPasswordReset ? handlePasswordReset : handleSubmit} className={styles.authForm}>
+                <h3>{isPasswordReset ? 'Reset Password' : 'Welcome Back'}</h3>
+                <p className={styles.formSubtitle}>
+                  {isPasswordReset ? 'Enter your email to receive a password reset link' : 'Sign in to continue your evolution'}
+                </p>
+                
                 <div className={styles.inputGroup}>
+                  <FaEnvelope className={styles.inputIcon} />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Email"
+                    placeholder="Email Address"
                     required
                   />
                 </div>
-                <div className={styles.inputGroup}>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Password"
-                    required
-                  />
-                </div>
+                {!isPasswordReset && (
+                  <div className={styles.inputGroup}>
+                    <FaLock className={styles.inputIcon} />
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Password"
+                      required
+                    />
+                  </div>
+                )}
+                
                 <button 
                   type="submit" 
                   className={styles.submitButton}
@@ -159,16 +343,72 @@ export default function LandingPage() {
                   {isLoading ? (
                     <div className={styles.loadingSpinner}></div>
                   ) : (
-                    'Sign In'
+                    isPasswordReset ? 'Send Reset Link' : 'Sign In'
+                  )}
+                </button>
+                
+                <div className={styles.formOptions}>
+                  {!isPasswordReset ? (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => setIsPasswordReset(true)}
+                    >
+                      Forgot password?
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => {
+                        setIsPasswordReset(false);
+                        resetAuthFeedback();
+                      }}
+                    >
+                      Back to sign in
+                    </button>
+                  )}
+                  
+                  <button
+                    type="button"
+                    className={styles.toggleFormButton}
+                    onClick={() => {
+                      setIsLogin(false);
+                      setIsPasswordReset(false);
+                      resetAuthFeedback();
+                    }}
+                  >
+                    Don't have an account? Sign Up
+                  </button>
+                </div>
+
+                <div className={styles.divider}>
+                  <span>or</span>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.socialButton}
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className={styles.loadingSpinner}></div>
+                  ) : (
+                    <>
+                      <FaGoogle className={styles.googleIcon} />
+                      <span>Continue with Google</span>
+                    </>
                   )}
                 </button>
               </form>
-            )}
-
-            {!isLogin && (
+            ) : (
               <form onSubmit={handleSubmit} className={styles.authForm}>
                 <h3>Join the Elite</h3>
+                <p className={styles.formSubtitle}>Create an account to start your transformation</p>
+                
                 <div className={styles.inputGroup}>
+                  <FaUser className={styles.inputIcon} />
                   <input
                     type="text"
                     name="name"
@@ -179,16 +419,18 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className={styles.inputGroup}>
+                  <FaEnvelope className={styles.inputIcon} />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Email"
+                    placeholder="Email Address"
                     required
                   />
                 </div>
                 <div className={styles.inputGroup}>
+                  <FaLock className={styles.inputIcon} />
                   <input
                     type="password"
                     name="password"
@@ -209,81 +451,42 @@ export default function LandingPage() {
                     'Create Account'
                   )}
                 </button>
+
+                <div className={styles.formOptions}>
+                  <button
+                    type="button"
+                    className={styles.toggleFormButton}
+                    onClick={() => {
+                      setIsLogin(true);
+                      setIsPasswordReset(false);
+                      resetAuthFeedback();
+                    }}
+                  >
+                    Already have an account? Sign In
+                  </button>
+                </div>
+
+                <div className={styles.divider}>
+                  <span>or</span>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.socialButton}
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className={styles.loadingSpinner}></div>
+                  ) : (
+                    <>
+                      <FaGoogle className={styles.googleIcon} />
+                      <span>Continue with Google</span>
+                    </>
+                  )}
+                </button>
               </form>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Single Page Content */}
-      <div className={styles.mainContent}>
-        {/* Hero Section */}
-        <div className={styles.heroSection}>
-          <div className={styles.heroContent}>
-            <div className={styles.heroTitle}>
-              <FaBrain className={styles.heroIcon} />
-              <h1>Zero2Elite</h1>
-            </div>
-            <p className={styles.heroSubtitle}>
-              Evolve from scratch through daily training challenges
-            </p>
-            <div className={styles.heroStats}>
-              <div className={styles.statItem}>
-                <FaTrophy />
-                <span>10+ Challenges</span>
-              </div>
-              <div className={styles.statItem}>
-                <FaChartLine />
-                <span>Track Progress</span>
-              </div>
-              <div className={styles.statItem}>
-                <FaUsers />
-                <span>Join Community</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Single Row Cards Section */}
-        <div className={styles.cardsSection}>
-          <div className={styles.cardsContainer}>
-            <div className={styles.cardRow}>
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>🚀</div>
-                <h3>From Zero to Elite</h3>
-                <p>Start your transformation journey with personalized training challenges</p>
-              </div>
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>📈</div>
-                <h3>Track Your Growth</h3>
-                <p>Monitor your evolution with detailed progress analytics and milestones</p>
-              </div>
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>🎯</div>
-                <h3>Adaptive Challenges</h3>
-                <p>Experience challenges that evolve with your growing capabilities</p>
-              </div>
-              <div className={styles.featureCard}>
-                <div className={styles.featureIcon}>🏆</div>
-                <h3>Earn Your Elite Status</h3>
-                <p>Unlock achievements and prove your elite transformation</p>
-              </div>
-              <div className={styles.challengePreviewCard}>
-                <div className={styles.challengeIcon}>🗣️</div>
-                <h3>Speech Mastery</h3>
-                <p>Master pronunciation and communication skills</p>
-              </div>
-              <div className={styles.challengePreviewCard}>
-                <div className={styles.challengeIcon}>🔢</div>
-                <h3>Visual Intelligence</h3>
-                <p>Enhance perception and processing speed</p>
-              </div>
-              <div className={styles.challengePreviewCard}>
-                <div className={styles.challengeIcon}>🏛️</div>
-                <h3>Memory Evolution</h3>
-                <p>Build advanced memory techniques</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

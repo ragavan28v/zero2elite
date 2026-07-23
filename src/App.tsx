@@ -7,7 +7,7 @@ import DailyChallengeGenerator from "./components/DailyChallengeGenerator";
 import AuthGuard from "./components/AuthGuard";
 import { useTrackerStore } from './store';
 import { auth } from './firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 function App() {
   const {
@@ -18,17 +18,29 @@ function App() {
   } = useTrackerStore();
 
   useEffect(() => {
+    // Set local persistence for session preservation across restarts
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+    // Clear any stuck auth action flag on load
+    localStorage.removeItem('auth_action');
+
     // Listen for Firebase Auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // If a login/signup action is currently running in LandingPage, ignore this listener trigger
+      if (localStorage.getItem('auth_action') !== null) {
+        return;
+      }
+
       if (firebaseUser) {
-        // User is signed in
+        // User is signed in (restoring session / reload)
         const user = {
           id: firebaseUser.uid,
           email: firebaseUser.email!,
           name: firebaseUser.displayName || 'User',
           startDate: new Date().toISOString().split('T')[0]
         };
-        await useTrackerStore.getState().setCurrentUser(user);
+
+        await useTrackerStore.getState().setCurrentUser(user, false);
         useTrackerStore.getState().setStartDate(user.startDate);
       } else {
         // User is signed out
