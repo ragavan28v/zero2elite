@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaBrain, FaTrophy, FaChartLine, FaUsers, FaEnvelope, FaLock, FaUser, FaGoogle, FaTimes } from 'react-icons/fa';
 import { useTrackerStore } from '../store';
 import { auth } from '../firebase';
@@ -38,6 +38,8 @@ export default function LandingPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const formContainerRef = useRef<HTMLDivElement | null>(null);
 
   const resetAuthFeedback = () => {
     setAuthError(null);
@@ -52,6 +54,20 @@ export default function LandingPage() {
       return () => clearTimeout(timer);
     }
   }, [authError, authSuccess]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const scrollToForm = () => {
+    if (!isMobile) return;
+    formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +207,367 @@ export default function LandingPage() {
     });
   };
 
+  const authFeedback = (isInline: boolean) => {
+    if (!(authError || authSuccess)) return null;
+
+    const popup = (
+      <div
+        className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup} ${
+          isInline ? styles.inlineFeedbackPopup : ''
+        }`}
+      >
+        <button
+          type="button"
+          className={styles.popupCloseButton}
+          onClick={resetAuthFeedback}
+        >
+          <FaTimes />
+        </button>
+        <p>{authError || authSuccess}</p>
+      </div>
+    );
+
+    return popup;
+  };
+
+  const authForm = isLogin ? (
+    <form onSubmit={isPasswordReset ? handlePasswordReset : handleSubmit} className={styles.authForm}>
+      <h3>{isPasswordReset ? 'Reset Password' : 'Welcome Back'}</h3>
+      <p className={styles.formSubtitle}>
+        {isPasswordReset ? 'Enter your email to receive a password reset link' : 'Sign in to continue your evolution'}
+      </p>
+
+      <div className={styles.inputGroup}>
+        <FaEnvelope className={styles.inputIcon} />
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          placeholder="Email Address"
+          required
+        />
+      </div>
+      {!isPasswordReset && (
+        <div className={styles.inputGroup}>
+          <FaLock className={styles.inputIcon} />
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Password"
+            required
+          />
+        </div>
+      )}
+
+      <button
+        type="submit"
+        className={styles.submitButton}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className={styles.loadingSpinner}></div>
+        ) : (
+          isPasswordReset ? 'Send Reset Link' : 'Sign In'
+        )}
+      </button>
+
+      <div className={styles.formOptions}>
+        {!isPasswordReset ? (
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => setIsPasswordReset(true)}
+          >
+            Forgot password?
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => {
+              setIsPasswordReset(false);
+              resetAuthFeedback();
+            }}
+          >
+            Back to sign in
+          </button>
+        )}
+
+        <button
+          type="button"
+          className={styles.toggleFormButton}
+          onClick={() => {
+            setIsLogin(false);
+            setIsPasswordReset(false);
+            resetAuthFeedback();
+            scrollToForm();
+          }}
+        >
+          Don't have an account? Sign Up
+        </button>
+      </div>
+
+      <div className={styles.divider}>
+        <span>or</span>
+      </div>
+
+      <button
+        type="button"
+        className={styles.socialButton}
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className={styles.loadingSpinner}></div>
+        ) : (
+          <>
+            <FaGoogle className={styles.googleIcon} />
+            <span>Continue with Google</span>
+          </>
+        )}
+      </button>
+    </form>
+  ) : (
+    <form onSubmit={handleSubmit} className={styles.authForm}>
+      <h3>Join the Elite</h3>
+      <p className={styles.formSubtitle}>Create an account to start your transformation</p>
+
+      <div className={styles.inputGroup}>
+        <FaUser className={styles.inputIcon} />
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="Full Name"
+          required
+        />
+      </div>
+      <div className={styles.inputGroup}>
+        <FaEnvelope className={styles.inputIcon} />
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          placeholder="Email Address"
+          required
+        />
+      </div>
+      <div className={styles.inputGroup}>
+        <FaLock className={styles.inputIcon} />
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleInputChange}
+          placeholder="Password"
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        className={styles.submitButton}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className={styles.loadingSpinner}></div>
+        ) : (
+          'Create Account'
+        )}
+      </button>
+
+      <div className={styles.formOptions}>
+        <button
+          type="button"
+          className={styles.toggleFormButton}
+          onClick={() => {
+            setIsLogin(true);
+            setIsPasswordReset(false);
+            resetAuthFeedback();
+            scrollToForm();
+          }}
+        >
+          Already have an account? Sign In
+        </button>
+      </div>
+
+      <div className={styles.divider}>
+        <span>or</span>
+      </div>
+
+      <button
+        type="button"
+        className={styles.socialButton}
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className={styles.loadingSpinner}></div>
+        ) : (
+          <>
+            <FaGoogle className={styles.googleIcon} />
+            <span>Continue with Google</span>
+          </>
+        )}
+      </button>
+    </form>
+  );
+
+  const mobileView = (
+    <div
+      className={styles.landingContainer}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100dvh',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
+      <div className={styles.backgroundElements}>
+        <div className={styles.orb1}></div>
+        <div className={styles.orb2}></div>
+        <div className={styles.orb3}></div>
+      </div>
+
+      <div className={styles.topNav} style={{ padding: '10px 12px', gap: 10, flexWrap: 'wrap' }}>
+        <div className={styles.logo} style={{ gap: 8, fontSize: '1.02rem' }}>
+          <FaBrain className={styles.logoIcon} style={{ fontSize: '1.65rem' }} />
+          <span>Zero2Elite</span>
+        </div>
+        <div className={styles.authButtons} style={{ marginLeft: 'auto' }}>
+          <button
+            onClick={() => {
+              setIsLogin(true);
+              setIsPasswordReset(false);
+              resetAuthFeedback();
+              scrollToForm();
+            }}
+            className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => {
+              setIsLogin(false);
+              setIsPasswordReset(false);
+              resetAuthFeedback();
+              scrollToForm();
+            }}
+            className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
+          >
+            Sign Up
+          </button>
+        </div>
+      </div>
+
+      <main className={styles.mainContent} style={{ flexDirection: 'column', gap: 0, height: 'auto', minHeight: 'auto' }}>
+        <section className={styles.leftColumn} style={{ padding: '16px 12px 18px', alignItems: 'center' }}>
+          <div
+            style={{
+              width: '100%',
+              borderRadius: 26,
+              overflow: 'hidden',
+              minHeight: 230,
+              background:
+                'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)), url(/selfGrowthillustration.png) center/cover no-repeat',
+              boxShadow: '0 18px 40px rgba(14, 165, 233, 0.12)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              display: 'flex',
+              alignItems: 'flex-end',
+            }}
+          >
+            <div style={{ padding: '22px 18px 20px', width: '100%' }}>
+              <div style={{ color: '#0f4c81', letterSpacing: 4, fontSize: 12, marginBottom: 12 }}>
+                ZERO2ELITE
+              </div>
+              <div style={{ color: '#114e8c', fontSize: 'clamp(2.4rem, 12vw, 4rem)', lineHeight: 0.92, fontWeight: 300 }}>
+                Daily
+              </div>
+              <div style={{ color: '#114e8c', fontSize: 'clamp(2.4rem, 12vw, 4rem)', lineHeight: 0.92, fontWeight: 300 }}>
+                ascension
+              </div>
+              <p style={{ color: '#1d5f9d', fontSize: 15, lineHeight: 1.6, maxWidth: 240, margin: '14px 0 0' }}>
+                Set the baseline. Shape the route. Evolve one day at a time.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.heroContent} style={{ width: '100%', maxWidth: '100%', alignItems: 'center', gap: 14, marginTop: 20 }}>
+            <div className={styles.heroBadgeContainer} style={{ alignItems: 'center', width: '100%', marginBottom: 4 }}>
+              <div className={styles.heroBadge} style={{ width: 'min(100%, 280px)', fontSize: '0.86rem', padding: '9px 12px' }}>
+                <span>✨ Cognitive Evolution Platform</span>
+              </div>
+              <div className={styles.badgeUnderline} style={{ width: 104, height: 5, margin: '8px auto 0' }}></div>
+            </div>
+
+            <p className={styles.heroSubtitle} style={{ maxWidth: 320, margin: 0, textAlign: 'center', fontSize: '0.9rem' }}>
+              Daily mental training challenges designed to elevate your cognitive baseline.
+            </p>
+
+            <div className={styles.featuresAndStatsContainer} style={{ width: '100%', marginTop: 12, gap: 16 }}>
+              <div className={styles.coreFeaturesList} style={{ width: '100%', alignItems: 'center', gap: 10 }}>
+                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
+                    <h3>Adaptive Training</h3>
+                    <p>Challenges tailored to your performance.</p>
+                  </div>
+                </div>
+                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
+                    <h3>Growth Analytics</h3>
+                    <p>Detailed mapping of cognitive progress.</p>
+                  </div>
+                </div>
+                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                  <span className={styles.accentDot}></span>
+                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
+                    <h3>Elite Recognition</h3>
+                    <p>Benchmarking against peak capabilities.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.verticalStatsList} style={{ width: '100%', justifyContent: 'center' }}>
+                <div className={styles.statItem} style={{ width: 'calc(50% - 6px)', maxWidth: 'calc(50% - 6px)' }}>
+                  <FaTrophy />
+                  <span>10+ Challenges</span>
+                </div>
+                <div className={styles.statItem} style={{ width: 'calc(50% - 6px)', maxWidth: 'calc(50% - 6px)' }}>
+                  <FaChartLine />
+                  <span>Track Progress</span>
+                </div>
+                <div className={styles.statItem} style={{ flexBasis: '60%', maxWidth: '60%' }}>
+                  <FaUsers />
+                  <span>Join Community</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.rightColumn} style={{ padding: '0 12px 20px', alignItems: 'stretch' }}>
+          <div className={styles.embeddedAuthContainer} ref={formContainerRef} style={{ maxWidth: '100%', gap: 10 }}>
+            {authFeedback(true)}
+            {authForm}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+
+  if (isMobile) {
+    return mobileView;
+  }
+
   return (
     <div className={styles.landingContainer}>
       {/* Background Elements */}
@@ -212,6 +589,7 @@ export default function LandingPage() {
               setIsLogin(true);
               setIsPasswordReset(false);
               resetAuthFeedback();
+              scrollToForm();
             }}
             className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
           >
@@ -222,6 +600,7 @@ export default function LandingPage() {
               setIsLogin(false);
               setIsPasswordReset(false);
               resetAuthFeedback();
+              scrollToForm();
             }}
             className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
           >
@@ -290,7 +669,20 @@ export default function LandingPage() {
 
         {/* Right Column: Embedded Form Blending into Surface */}
         <div className={styles.rightColumn}>
-          <div className={styles.embeddedAuthContainer}>
+          <div className={styles.embeddedAuthContainer} ref={formContainerRef}>
+            {(authError || authSuccess) && isMobile && (
+              <div className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup} ${styles.inlineFeedbackPopup}`}>
+                <button
+                  type="button"
+                  className={styles.popupCloseButton}
+                  onClick={resetAuthFeedback}
+                >
+                  <FaTimes />
+                </button>
+                <p>{authError || authSuccess}</p>
+              </div>
+            )}
+
             {isLogin ? (
               <form onSubmit={isPasswordReset ? handlePasswordReset : handleSubmit} className={styles.authForm}>
                 <h3>{isPasswordReset ? 'Reset Password' : 'Welcome Back'}</h3>
@@ -480,7 +872,7 @@ export default function LandingPage() {
       </div>
 
       {/* Feedback Popup - Fixed Position */}
-      {(authError || authSuccess) && (
+      {(authError || authSuccess) && !isMobile && (
         <div className={`${styles.feedbackPopup} ${authError ? styles.errorPopup : styles.successPopup}`}>
           <button
             type="button"

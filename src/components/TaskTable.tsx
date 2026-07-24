@@ -38,6 +38,16 @@ export default function TaskTable() {
   const [noteText, setNoteText] = useState('');
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [templateDraft, setTemplateDraft] = useState<Block[]>(cloneDefaultBlocks());
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (templateEditorOpen) {
@@ -126,27 +136,29 @@ export default function TaskTable() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
-          marginBottom: 12,
-          padding: '10px 12px',
-          borderRadius: 14,
-          background: 'rgba(255,255,255,0.72)',
-          border: '1px solid rgba(37, 99, 235, 0.12)',
-          backdropFilter: 'blur(10px)',
+          gap: isMobile ? 12 : 12,
+          marginBottom: isMobile ? 12 : 12,
+          padding: isMobile ? '10px 12px' : '10px 12px',
+          borderRadius: isMobile ? 14 : 14,
+          background: isMobile ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.72)',
+          border: isMobile ? '1px solid rgba(37, 99, 235, 0.12)' : '1px solid rgba(37, 99, 235, 0.12)',
+          backdropFilter: isMobile ? 'blur(10px)' : 'blur(10px)',
           flexWrap: 'wrap',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: isMobile ? '100%' : 'auto' }}>
           <SparklesIcon style={{ width: 18, height: 18, color: '#2563eb' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Daily schedule</span>
-            <span style={{ fontSize: 12, color: '#6b7280' }}>
-              Default plan stays intact. Custom edits save to the current day.
-            </span>
+            <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: '#111827' }}>Daily schedule</span>
+            {!isMobile && (
+              <span style={{ fontSize: 12, color: '#6b7280' }}>
+                Default plan stays intact. Custom edits save to the current day.
+              </span>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
           <button
             onClick={() => setIsCustomizing((value) => !value)}
             style={{
@@ -161,10 +173,11 @@ export default function TaskTable() {
               fontSize: 12,
               fontWeight: 700,
               cursor: 'pointer',
+              flex: isMobile ? 1 : 0,
             }}
           >
             <PencilSquareIcon style={{ width: 16, height: 16 }} />
-            {isCustomizing ? 'Done editing' : 'Customize schedule'}
+            {isCustomizing ? 'Done' : 'Customize'}
           </button>
 
           <button
@@ -181,10 +194,11 @@ export default function TaskTable() {
               fontSize: 12,
               fontWeight: 700,
               cursor: 'pointer',
+              flex: isMobile ? 1 : 0,
             }}
           >
             <SparklesIcon style={{ width: 16, height: 16 }} />
-            Edit template
+            {isMobile ? 'Template' : 'Edit template'}
           </button>
 
           {isCustomizing && (
@@ -199,14 +213,15 @@ export default function TaskTable() {
                   borderRadius: 10,
                   border: '1px solid rgba(34, 197, 94, 0.18)',
                   background: '#f0fdf4',
-                color: '#16a34a',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
+                  color: '#16a34a',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  flex: isMobile ? 1 : 0,
+                }}
               >
                 <PlusCircleIcon style={{ width: 16, height: 16 }} />
-                Add block
+                {isMobile ? 'Add' : 'Add block'}
               </button>
 
               <button
@@ -223,163 +238,308 @@ export default function TaskTable() {
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',
+                  flex: isMobile ? 1 : 0,
                 }}
               >
                 <ArrowPathIcon style={{ width: 16, height: 16 }} />
-                Restore template
+                {isMobile ? 'Reset' : 'Restore template'}
               </button>
             </>
           )}
         </div>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
-        <thead>
-          <tr style={{ color: '#888', fontWeight: 500 }}>
-            <th style={{ textAlign: 'left', padding: '4px 8px', width: '16%' }}>Time</th>
-            <th style={{ textAlign: 'left', padding: '4px 8px', width: '48%' }}>Task</th>
-            <th style={{ textAlign: 'center', padding: '4px 8px', width: '16%' }}>Status</th>
-            <th style={{ textAlign: 'center', padding: '4px 8px', width: '20%' }}>Note</th>
-          </tr>
-        </thead>
-        <tbody>
+      {isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {blocks.map((block, i) => (
-            <tr key={`${currentDate}-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
-              <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>
-                {isCustomizing ? (
+            <div
+              key={`${currentDate}-${i}-${block.time}-${block.label}`}
+              style={{
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 18,
+                padding: '14px 14px 12px',
+                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: 0.2 }}>
+                      {isCustomizing ? (
+                        <input
+                          value={block.time}
+                          onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
+                          style={{
+                            width: 92,
+                            fontSize: 12,
+                            padding: '5px 7px',
+                            borderRadius: 8,
+                            border: '1px solid #e5e7eb',
+                            outline: 'none',
+                            color: '#2563eb',
+                            fontWeight: 700,
+                            background: '#f8fafc',
+                          }}
+                        />
+                      ) : (
+                        block.time
+                      )}
+                    </div>
+                    <div style={{ color: '#374151', fontWeight: 500, fontSize: 12, lineHeight: 1.5, wordBreak: 'break-word', flex: 1 }}>
+                      {isCustomizing ? (
+                        <input
+                          value={block.label}
+                          onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
+                          style={{
+                            width: '100%',
+                            fontSize: 12,
+                            padding: '5px 7px',
+                            borderRadius: 8,
+                            border: '1px solid #e5e7eb',
+                            outline: 'none',
+                            color: '#111827',
+                            fontWeight: 500,
+                            background: '#fff',
+                          }}
+                        />
+                      ) : (
+                        block.label
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleEditNote(i, block.note)}
+                  style={{ background: 'none', border: 'none', padding: 6, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  title="Add note"
+                >
+                  <PencilSquareIcon style={{ width: 18, height: 18, color: '#8b8b8b' }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => markBlock(i, block.status === 'done' ? 'pending' : 'done')}
+                  style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title={block.status === 'done' ? 'Mark as pending' : 'Mark as done'}
+                >
+                  <CheckCircleIcon style={{ color: block.status === 'done' ? '#22c55e' : '#e5e7eb', width: 22, height: 22 }} />
+                </button>
+                <button
+                  onClick={() => markBlock(i, block.status === 'skipped' ? 'pending' : 'skipped')}
+                  style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title={block.status === 'skipped' ? 'Mark as pending' : 'Mark as skipped'}
+                >
+                  <XCircleIcon style={{ color: block.status === 'skipped' ? '#ef4444' : '#e5e7eb', width: 22, height: 22 }} />
+                </button>
+                <button
+                  onClick={() => markBlock(i, 'pending')}
+                  style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title="Mark as pending"
+                >
+                  <MinusCircleIcon style={{ color: block.status === 'pending' ? '#2563eb' : '#e5e7eb', width: 22, height: 22 }} />
+                </button>
+                {isCustomizing && (
+                  <button
+                    onClick={() => handleRemoveBlock(i)}
+                    style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}
+                    title="Remove block"
+                  >
+                    <TrashIcon style={{ width: 18, height: 18, color: '#dc2626' }} />
+                  </button>
+                )}
+              </div>
+
+              {editingIdx === i && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <input
-                    value={block.time}
-                    onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
                     style={{
-                      width: '100%',
                       fontSize: 12,
-                      padding: '6px 8px',
+                      padding: '7px 8px',
                       borderRadius: 8,
                       border: '1px solid #e5e7eb',
-                      outline: 'none',
-                      color: '#2563eb',
-                      fontWeight: 600,
+                      flex: '1 1 100%',
+                      minWidth: 0,
                     }}
+                    autoFocus
+                    placeholder="Note"
                   />
-                ) : (
-                  block.time
-                )}
-              </td>
-              <td style={{ padding: '4px 8px', color: '#222' }}>
-                {isCustomizing ? (
-                  <input
-                    value={block.label}
-                    onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
+                  <button
+                    onClick={handleSaveNote}
                     style={{
-                      width: '100%',
                       fontSize: 12,
-                      padding: '6px 8px',
+                      padding: '8px 12px',
                       borderRadius: 8,
-                      border: '1px solid #e5e7eb',
-                      outline: 'none',
-                      color: '#111827',
-                      fontWeight: 500,
+                      border: 'none',
+                      background: '#2563eb',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
                     }}
-                  />
-                ) : (
-                  block.label
-                )}
-              </td>
-              <td style={{ textAlign: 'center', padding: '4px 8px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => markBlock(i, block.status === 'done' ? 'pending' : 'done')}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                    title={block.status === 'done' ? 'Mark as pending' : 'Mark as done'}
                   >
-                    <CheckCircleIcon style={{ color: block.status === 'done' ? '#22c55e' : '#e5e7eb', width: 18, height: 18 }} />
+                    Save
                   </button>
-                  <button
-                    onClick={() => markBlock(i, block.status === 'skipped' ? 'pending' : 'skipped')}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                    title={block.status === 'skipped' ? 'Mark as pending' : 'Mark as skipped'}
-                  >
-                    <XCircleIcon style={{ color: block.status === 'skipped' ? '#ef4444' : '#e5e7eb', width: 18, height: 18 }} />
-                  </button>
-                  <button
-                    onClick={() => markBlock(i, 'pending')}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                    title="Mark as pending"
-                  >
-                    <MinusCircleIcon style={{ color: block.status === 'pending' ? '#2563eb' : '#e5e7eb', width: 18, height: 18 }} />
-                  </button>
-                </span>
-              </td>
-              <td style={{ textAlign: 'center', padding: '4px 8px', minWidth: 120 }}>
-                {editingIdx === i ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <input
-                      value={noteText}
-                      onChange={(e) => setNoteText(e.target.value)}
-                      style={{
-                        fontSize: 12,
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        border: '1px solid #e5e7eb',
-                        width: 80,
-                      }}
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveNote}
-                      style={{
-                        fontSize: 12,
-                        padding: '2px 8px',
-                        borderRadius: 4,
-                        border: 'none',
-                        background: '#2563eb',
-                        color: '#fff',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Save
-                    </button>
-                  </span>
-                ) : (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
-                    {block.note && (
-                      <span
-                        style={{
-                          color: '#2563eb',
-                          fontSize: 12,
-                          maxWidth: 88,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                        title={block.note}
-                      >
-                        {block.note}
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handleEditNote(i, block.note)}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                      title="Add note"
-                    >
-                      <PencilSquareIcon style={{ width: 16, height: 16, color: '#888' }} />
-                    </button>
-                    {isCustomizing && (
-                      <button
-                        onClick={() => handleRemoveBlock(i)}
-                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                        title="Remove block"
-                      >
-                        <TrashIcon style={{ width: 16, height: 16, color: '#dc2626' }} />
-                      </button>
-                    )}
-                  </span>
-                )}
-              </td>
-            </tr>
+                </div>
+              )}
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
+          <thead>
+            <tr style={{ color: '#888', fontWeight: 500 }}>
+              <th style={{ textAlign: 'left', padding: '4px 8px', width: '16%' }}>Time</th>
+              <th style={{ textAlign: 'left', padding: '4px 8px', width: '48%' }}>Task</th>
+              <th style={{ textAlign: 'center', padding: '4px 8px', width: '16%' }}>Status</th>
+              <th style={{ textAlign: 'center', padding: '4px 8px', width: '20%' }}>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {blocks.map((block, i) => (
+              <tr key={`${currentDate}-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>
+                  {isCustomizing ? (
+                    <input
+                      value={block.time}
+                      onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
+                      style={{
+                        width: '100%',
+                        fontSize: 12,
+                        padding: '6px 8px',
+                        borderRadius: 8,
+                        border: '1px solid #e5e7eb',
+                        outline: 'none',
+                        color: '#2563eb',
+                        fontWeight: 600,
+                      }}
+                    />
+                  ) : (
+                    block.time
+                  )}
+                </td>
+                <td style={{ padding: '4px 8px', color: '#222' }}>
+                  {isCustomizing ? (
+                    <input
+                      value={block.label}
+                      onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
+                      style={{
+                        width: '100%',
+                        fontSize: 12,
+                        padding: '6px 8px',
+                        borderRadius: 8,
+                        border: '1px solid #e5e7eb',
+                        outline: 'none',
+                        color: '#111827',
+                        fontWeight: 500,
+                      }}
+                    />
+                  ) : (
+                    block.label
+                  )}
+                </td>
+                <td style={{ textAlign: 'center', padding: '4px 8px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => markBlock(i, block.status === 'done' ? 'pending' : 'done')}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      title={block.status === 'done' ? 'Mark as pending' : 'Mark as done'}
+                    >
+                      <CheckCircleIcon style={{ color: block.status === 'done' ? '#22c55e' : '#e5e7eb', width: 18, height: 18 }} />
+                    </button>
+                    <button
+                      onClick={() => markBlock(i, block.status === 'skipped' ? 'pending' : 'skipped')}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      title={block.status === 'skipped' ? 'Mark as pending' : 'Mark as skipped'}
+                    >
+                      <XCircleIcon style={{ color: block.status === 'skipped' ? '#ef4444' : '#e5e7eb', width: 18, height: 18 }} />
+                    </button>
+                    <button
+                      onClick={() => markBlock(i, 'pending')}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      title="Mark as pending"
+                    >
+                      <MinusCircleIcon style={{ color: block.status === 'pending' ? '#2563eb' : '#e5e7eb', width: 18, height: 18 }} />
+                    </button>
+                  </span>
+                </td>
+                <td style={{ textAlign: 'center', padding: '4px 8px', minWidth: 120 }}>
+                  {editingIdx === i ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        style={{
+                          fontSize: 12,
+                          padding: '2px 6px',
+                          borderRadius: 4,
+                          border: '1px solid #e5e7eb',
+                          width: 80,
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleSaveNote}
+                        style={{
+                          fontSize: 12,
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          border: 'none',
+                          background: '#2563eb',
+                          color: '#fff',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Save
+                      </button>
+                    </span>
+                  ) : (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
+                      {block.note && (
+                        <span
+                          style={{
+                            color: '#2563eb',
+                            fontSize: 12,
+                            maxWidth: 88,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={block.note}
+                        >
+                          {block.note}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleEditNote(i, block.note)}
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                        title="Add note"
+                      >
+                        <PencilSquareIcon style={{ width: 16, height: 16, color: '#888' }} />
+                      </button>
+                      {isCustomizing && (
+                        <button
+                          onClick={() => handleRemoveBlock(i)}
+                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                          title="Remove block"
+                        >
+                          <TrashIcon style={{ width: 16, height: 16, color: '#dc2626' }} />
+                        </button>
+                      )}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {isCustomizing && (
         <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
