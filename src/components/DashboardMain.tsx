@@ -28,7 +28,7 @@ export default function DashboardMain() {
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 420px) 1fr',
       gap: 0,
-      width: isMobile ? '100%' : '100vw',
+      width: '100%',
       height: isMobile ? 'auto' : 'calc(100vh - 80px)',
       minHeight: isMobile ? 'auto' : 0,
       background: 'none',

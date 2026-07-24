@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { FaBrain, FaTrophy, FaChartLine, FaUsers, FaEnvelope, FaLock, FaUser, FaGoogle, FaTimes } from 'react-icons/fa';
 import { useTrackerStore } from '../store';
 import { auth } from '../firebase';
@@ -9,8 +9,6 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
-  signOut,
-  getAdditionalUserInfo,
 } from 'firebase/auth';
 import styles from './LandingPage.module.css';
 
@@ -46,9 +44,16 @@ export default function LandingPage() {
     setAuthSuccess(null);
   };
 
-  const scrollToForm = () => {
-    if (!isMobile) return;
-    formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const handleMobileAuthNav = (nextIsLogin: boolean) => {
+    setIsLogin(nextIsLogin);
+    setIsPasswordReset(false);
+    resetAuthFeedback();
+
+    if (!isMobile || !formContainerRef.current) return;
+
+    const targetTop =
+      window.scrollY + formContainerRef.current.getBoundingClientRect().top - 12;
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -137,20 +142,7 @@ export default function LandingPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const isNewUser = getAdditionalUserInfo(result)?.isNewUser;
-
-      if (isLogin) {
-        // Sign In Mode: Block if this is a brand new account (unregistered)
-        if (isNewUser) {
-          await result.user.delete();
-          await signOut(auth);
-          useTrackerStore.getState().logout();
-          setAuthError('No account found with this Google account. Please sign up first.');
-          localStorage.removeItem('auth_action');
-          setIsLoading(false);
-          return;
-        }
-      }
+      const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
 
       const user = {
         id: result.user.uid,
@@ -159,14 +151,18 @@ export default function LandingPage() {
         startDate: new Date().toISOString().split('T')[0]
       };
 
-      await setCurrentUser(user, !isLogin && isNewUser);
+      await setCurrentUser(user, isNewUser);
       setStartDate(user.startDate);
       localStorage.removeItem('auth_action');
     } catch (error: any) {
       console.error('Google auth error:', error);
       localStorage.removeItem('auth_action');
       if (error.code !== 'auth/popup-closed-by-user') {
-        const errorMessage = error.message || 'Google sign-in failed.';
+        let errorMessage = error.message || 'Google sign-in failed.';
+        if (error.code === 'auth/unauthorized-domain' || error.code === 'auth/unauthorised-domain') {
+          errorMessage =
+            'This domain is not authorized for Google sign-in. Add the current hostname to Firebase Authentication > Settings > Authorized domains, then try again.';
+        }
         setAuthError(errorMessage);
       }
     } finally {
@@ -303,7 +299,6 @@ export default function LandingPage() {
             setIsLogin(false);
             setIsPasswordReset(false);
             resetAuthFeedback();
-            scrollToForm();
           }}
         >
           Don't have an account? Sign Up
@@ -388,7 +383,6 @@ export default function LandingPage() {
             setIsLogin(true);
             setIsPasswordReset(false);
             resetAuthFeedback();
-            scrollToForm();
           }}
         >
           Already have an account? Sign In
@@ -419,152 +413,203 @@ export default function LandingPage() {
 
   const mobileView = (
     <div
-      className={styles.landingContainer}
       style={{
-        width: '100%',
         minHeight: '100dvh',
-        height: 'auto',
-        position: 'relative',
-        overflowY: 'visible',
+        width: '100%',
+        boxSizing: 'border-box',
         overflowX: 'hidden',
+        background:
+          'radial-gradient(circle at top left, rgba(255,255,255,0.92), transparent 26%), radial-gradient(circle at bottom right, rgba(96,165,250,0.35), transparent 28%), linear-gradient(135deg, #e3f2fd 0%, #bbdefb 36%, #90caf9 68%, #e8f5ff 100%)',
+        padding: '12px 12px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
       }}
     >
-      <div className={styles.backgroundElements}>
-        <div className={styles.orb1}></div>
-        <div className={styles.orb2}></div>
-        <div className={styles.orb3}></div>
-      </div>
-
-      <div className={styles.topNav} style={{ padding: '10px 12px', gap: 10, flexWrap: 'wrap' }}>
-        <div className={styles.logo} style={{ gap: 8, fontSize: '1.02rem' }}>
-          <FaBrain className={styles.logoIcon} style={{ fontSize: '1.65rem' }} />
-          <span>Zero2Elite</span>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          padding: '12px 14px',
+          borderRadius: 24,
+          background: 'rgba(255, 255, 255, 0.72)',
+          border: '1px solid rgba(33, 150, 243, 0.16)',
+          boxShadow: '0 10px 24px rgba(33, 150, 243, 0.08)',
+          backdropFilter: 'blur(18px)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <FaBrain style={{ fontSize: '1.8rem', color: '#2196f3', flexShrink: 0 }} />
+          <span style={{ fontSize: '1.02rem', fontWeight: 700, color: '#1976d2', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
+            Zero2Elite
+          </span>
         </div>
-        <div className={styles.authButtons} style={{ marginLeft: 'auto' }}>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: 4,
+            borderRadius: 999,
+            background: 'rgba(33, 150, 243, 0.09)',
+            border: '1px solid rgba(33, 150, 243, 0.12)',
+            flexShrink: 0,
+          }}
+        >
           <button
+            type="button"
             onClick={() => {
-              setIsLogin(true);
-              setIsPasswordReset(false);
-              resetAuthFeedback();
-              scrollToForm();
+              handleMobileAuthNav(true);
             }}
-            className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
+            style={{
+              border: 'none',
+              background: isLogin ? '#2196f3' : 'transparent',
+              color: isLogin ? '#fff' : '#1976d2',
+              padding: '9px 14px',
+              borderRadius: 999,
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              boxShadow: isLogin ? '0 6px 14px rgba(33, 150, 243, 0.25)' : 'none',
+            }}
           >
             Sign In
           </button>
           <button
+            type="button"
             onClick={() => {
-              setIsLogin(false);
-              setIsPasswordReset(false);
-              resetAuthFeedback();
-              scrollToForm();
+              handleMobileAuthNav(false);
             }}
-            className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
+            style={{
+              border: 'none',
+              background: !isLogin ? '#2196f3' : 'transparent',
+              color: !isLogin ? '#fff' : '#1976d2',
+              padding: '9px 14px',
+              borderRadius: 999,
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              boxShadow: !isLogin ? '0 6px 14px rgba(33, 150, 243, 0.25)' : 'none',
+            }}
           >
             Sign Up
           </button>
         </div>
       </div>
 
-      <main className={styles.mainContent} style={{ flexDirection: 'column', gap: 0, height: 'auto', minHeight: 'auto' }}>
-        <section className={styles.leftColumn} style={{ padding: '16px 12px 18px', alignItems: 'center' }}>
-          {!isMobile && (
-          <div
-            style={{
-              width: '100%',
-              borderRadius: 26,
-              overflow: 'hidden',
-              minHeight: 230,
-              background:
-                'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)), url(/selfGrowthillustration.png) center/cover no-repeat',
-              boxShadow: '0 18px 40px rgba(14, 165, 233, 0.12)',
-              border: '1px solid rgba(255,255,255,0.35)',
-              display: 'flex',
-              alignItems: 'flex-end',
-            }}
-          >
-            <div style={{ padding: '22px 18px 20px', width: '100%' }}>
-              <div style={{ color: '#0f4c81', letterSpacing: 4, fontSize: 12, marginBottom: 12 }}>
-                ZERO2ELITE
-              </div>
-              <div style={{ color: '#114e8c', fontSize: 'clamp(2.4rem, 12vw, 4rem)', lineHeight: 0.92, fontWeight: 300 }}>
-                Daily
-              </div>
-              <div style={{ color: '#114e8c', fontSize: 'clamp(2.4rem, 12vw, 4rem)', lineHeight: 0.92, fontWeight: 300 }}>
-                ascension
-              </div>
-              <p style={{ color: '#1d5f9d', fontSize: 15, lineHeight: 1.6, maxWidth: 240, margin: '14px 0 0' }}>
-                Set the baseline. Shape the route. Evolve one day at a time.
-              </p>
-            </div>
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <article
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 28,
+            minHeight: 240,
+            padding: '18px 16px',
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06)), linear-gradient(135deg, rgba(227,242,253,0.4), rgba(100,181,246,0.18)), url(/selfGrowthillustration.png) center/cover no-repeat',
+            boxShadow: '0 18px 42px rgba(33, 150, 243, 0.14)',
+            border: '1px solid rgba(255,255,255,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <div style={{ color: '#0f4c81', letterSpacing: 3.5, fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
+            COGNITIVE EVOLUTION PLATFORM
           </div>
-          )}
+          <div style={{ color: '#114e8c', fontSize: 'clamp(2.55rem, 13vw, 3.85rem)', lineHeight: 0.92, fontWeight: 300 }}>
+            Daily
+          </div>
+          <div style={{ color: '#114e8c', fontSize: 'clamp(2.55rem, 13vw, 3.85rem)', lineHeight: 0.92, fontWeight: 300, marginBottom: 10 }}>
+            ascension
+          </div>
+          <p style={{ color: '#1d5f9d', fontSize: '1.02rem', lineHeight: 1.5, maxWidth: 270, margin: 0 }}>
+            Set the baseline. Shape the route. Evolve one day at a time.
+          </p>
+        </article>
 
-          <div className={styles.heroContent} style={{ width: '100%', maxWidth: '100%', alignItems: 'center', gap: 14, marginTop: 8 }}>
-            <div className={styles.heroBadgeContainer} style={{ alignItems: 'center', width: '100%', marginBottom: 4 }}>
-              <div className={styles.heroBadge} style={{ width: 'min(100%, 280px)', fontSize: '0.86rem', padding: '9px 12px' }}>
-                <span>✨ Cognitive Evolution Platform</span>
-              </div>
-              <div className={styles.badgeUnderline} style={{ width: 104, height: 5, margin: '8px auto 0' }}></div>
-            </div>
-
-            <p className={styles.heroSubtitle} style={{ maxWidth: 320, margin: 0, textAlign: 'center', fontSize: '0.9rem' }}>
-              Daily mental training challenges designed to elevate your cognitive baseline.
-            </p>
-
-            <div className={styles.featuresAndStatsContainer} style={{ width: '100%', marginTop: 12, gap: 16 }}>
-              <div className={styles.coreFeaturesList} style={{ width: '100%', alignItems: 'center', gap: 10 }}>
-                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <span className={styles.accentDot}></span>
-                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
-                    <h3>Adaptive Training</h3>
-                    <p>Challenges tailored to your performance.</p>
-                  </div>
-                </div>
-                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <span className={styles.accentDot}></span>
-                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
-                    <h3>Growth Analytics</h3>
-                    <p>Detailed mapping of cognitive progress.</p>
-                  </div>
-                </div>
-                <div className={styles.featureItem} style={{ width: 'min(100%, 300px)', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <span className={styles.accentDot}></span>
-                  <div className={styles.featureItemText} style={{ alignItems: 'center' }}>
-                    <h3>Elite Recognition</h3>
-                    <p>Benchmarking against peak capabilities.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.verticalStatsList} style={{ width: '100%', justifyContent: 'center' }}>
-                <div className={styles.statItem} style={{ width: 'calc(50% - 6px)', maxWidth: 'calc(50% - 6px)' }}>
-                  <FaTrophy />
-                  <span>10+ Challenges</span>
-                </div>
-                <div className={styles.statItem} style={{ width: 'calc(50% - 6px)', maxWidth: 'calc(50% - 6px)' }}>
-                  <FaChartLine />
-                  <span>Track Progress</span>
-                </div>
-                <div className={styles.statItem} style={{ flexBasis: '60%', maxWidth: '60%' }}>
-                  <FaUsers />
-                  <span>Join Community</span>
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '2px 2px 0' }}>
+          {[
+            {
+              title: 'Adaptive Training',
+              copy: 'Challenges tailored to your performance.',
+            },
+            {
+              title: 'Growth Analytics',
+              copy: 'Detailed mapping of cognitive progress.',
+            },
+            {
+              title: 'Elite Recognition',
+              copy: 'Benchmarking against peak capabilities.',
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                padding: 0,
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                textAlign: 'center',
+              }}
+            >
+              <span
+                style={{
+                  width: 9,
+                  height: 9,
+                  marginTop: 0,
+                  borderRadius: 2,
+                  transform: 'rotate(45deg)',
+                  background: 'linear-gradient(135deg, #2196f3 0%, #1565c0 100%)',
+                  flexShrink: 0,
+                }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <strong style={{ color: '#1976d2', fontSize: '1rem', lineHeight: 1.2 }}>{item.title}</strong>
+                <span style={{ color: '#1d5f9d', fontSize: '0.94rem', lineHeight: 1.35 }}>{item.copy}</span>
               </div>
             </div>
-          </div>
-        </section>
+          ))}
+        </div>
 
-        <section className={styles.rightColumn} style={{ padding: '0 12px 20px', alignItems: 'stretch' }}>
-          <div className={styles.embeddedAuthContainer} ref={formContainerRef} style={{ maxWidth: '100%', gap: 10 }}>
-            {authFeedback(true)}
-            {authForm}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+            <FaTrophy style={{ fontSize: '1rem' }} />
+            <span>10+ Challenges</span>
           </div>
-        </section>
-      </main>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+            <FaChartLine style={{ fontSize: '1rem' }} />
+            <span>Track Progress</span>
+          </div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+            <FaUsers style={{ fontSize: '1rem' }} />
+            <span>Join Community</span>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {authFeedback(true)}
+        <div
+          ref={formContainerRef}
+          style={{
+            background: 'rgba(255,255,255,0.9)',
+            border: '1px solid rgba(33,150,243,0.14)',
+            borderRadius: 24,
+            boxShadow: '0 14px 30px rgba(33, 150, 243, 0.09)',
+            padding: '14px 14px 16px',
+          }}
+        >
+          {authForm}
+        </div>
+      </section>
     </div>
   );
-
   if (isMobile) {
     return mobileView;
   }
@@ -590,7 +635,6 @@ export default function LandingPage() {
               setIsLogin(true);
               setIsPasswordReset(false);
               resetAuthFeedback();
-              scrollToForm();
             }}
             className={`${styles.authButton} ${isLogin ? styles.active : ''}`}
           >
@@ -601,7 +645,6 @@ export default function LandingPage() {
               setIsLogin(false);
               setIsPasswordReset(false);
               resetAuthFeedback();
-              scrollToForm();
             }}
             className={`${styles.authButton} ${!isLogin ? styles.active : ''}`}
           >
@@ -875,3 +918,4 @@ export default function LandingPage() {
     </div>
   );
 } 
+

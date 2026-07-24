@@ -10,10 +10,6 @@ html, body {
   color: #12304f;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 #root {
   /* max-width: 1280px; */
   /* margin: 0 auto; */
@@ -120,11 +116,18 @@ main {
 }
 
 @media (max-width: 768px) {
-  html, body, #root {
+  html, body {
     width: 100%;
     height: auto;
     min-height: 100vh;
     overflow-y: auto;
+  }
+
+  #root {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .elite-root,
@@ -159,7 +162,7 @@ main {
 
 .elite-root {
   display: flex;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -178,7 +181,7 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
