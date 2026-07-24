@@ -86,7 +86,10 @@ function App() {
 
             <div className="schedule-choice-content">
               <div className="schedule-choice-kicker">Welcome {currentUser?.name || 'User'}</div>
-              <h2>Choose your opening<br />protocol</h2>
+              <h2>
+                <span>Choose your</span>
+                <span>opening protocol</span>
+              </h2>
               <p className="schedule-choice-intro">
                 Start with your own template or step into the default master plan. You can still refine a single day later without losing your foundation.
               </p>
@@ -111,7 +114,6 @@ function App() {
 
                 <div className="schedule-choice-option">
                   <div className="schedule-choice-option-copy">
-                    <span className="schedule-choice-label schedule-choice-label-secondary">Use Master Plan</span>
                     <strong>Launch with the default route</strong>
                     <p>Keep the Zero2Elite master schedule and customize it later whenever you want.</p>
                   </div>
@@ -119,7 +121,7 @@ function App() {
                     className="schedule-choice-action schedule-choice-action-secondary"
                     onClick={() => setScheduleChoicePending(false)}
                   >
-                    Skip for now
+                    Use Master Plan
                   </button>
                 </div>
               </div>

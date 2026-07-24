@@ -582,34 +582,44 @@ main {
 
 @media (max-width: 640px) {
   .schedule-choice-overlay {
-    padding: 0;
+    padding: 10px 10px 12px;
     overflow-y: auto;
+    align-items: flex-start;
   }
 
   .schedule-choice-shell {
     grid-template-columns: 1fr;
-    min-height: 100dvh;
-    width: 100vw;
+    min-height: calc(100dvh - 20px);
+    width: min(100vw - 20px, 560px);
     height: auto;
-    border-radius: 0;
+    border-radius: 22px;
     overflow-y: auto;
+    box-shadow: 0 16px 38px rgba(33, 150, 243, 0.14);
+    margin: 0 auto;
   }
 
   .schedule-choice-visual {
-    display: none;
+    display: flex;
+    min-height: 290px;
+    max-height: 330px;
   }
 
   .schedule-choice-visual-core {
-    left: 8%;
-    top: 10%;
-    max-width: 260px;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    max-width: 280px;
+    width: calc(100% - 32px);
+    text-align: center;
+    justify-items: center;
   }
 
   .schedule-choice-content {
-    padding: 18px 16px 20px;
+    padding: 6px 14px 10px;
     align-items: center;
     text-align: center;
-    min-height: 100dvh;
+    min-height: auto;
+    gap: 2px;
   }
 
   .schedule-choice-content h2,
@@ -619,33 +629,79 @@ main {
     text-align: center;
   }
 
-  .schedule-choice-actions {
-    max-width: 100%;
-    gap: 14px;
-  }
-
-  .schedule-choice-option {
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    border-top: none;
-    padding: 8px 0 10px;
-  }
-
-  .schedule-choice-option p {
-    max-width: 28ch;
+  .schedule-choice-kicker {
+    font-size: 1.35rem;
+    line-height: 1.05;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   .schedule-choice-content h2 {
     max-width: 14ch;
     width: auto;
+    line-height: 0.98;
+    margin: 0 0 2px;
+    font-size: clamp(2.45rem, 8.7vw, 3.2rem);
+  }
+
+  .schedule-choice-content h2 span {
+    display: block;
+  }
+
+  .schedule-choice-intro {
+    margin-top: 0;
+    margin-bottom: -4px;
+    font-size: 1.04rem;
+    line-height: 1.48;
+  }
+
+  .schedule-choice-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 100%;
+    gap: 8px;
+    align-items: stretch;
+    width: 100%;
+    margin-top: -10px;
+    justify-items: center;
+  }
+
+  .schedule-choice-option {
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    border-top: none;
+    padding: 4px 4px 6px;
+    height: 100%;
+    width: 100%;
+  }
+
+  .schedule-choice-option p {
+    max-width: 28ch;
+    font-size: 1rem;
+    line-height: 1.45;
+    margin: 0;
   }
 
   .schedule-choice-option-copy {
     align-items: center;
+    gap: 6px;
+  }
+
+  .schedule-choice-option:nth-child(2) .schedule-choice-option-copy {
+    margin-top: 2.2rem;
+  }
+
+  .schedule-choice-option-copy strong {
+    font-size: 1.12rem;
+    line-height: 1.15;
   }
 
   .schedule-choice-action {
-    min-width: 118px;
+    width: 100%;
+    min-width: 0;
+    padding: 13px 14px;
+    font-size: 1rem;
   }
 }
