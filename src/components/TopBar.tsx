@@ -1,7 +1,7 @@
 import { CalendarDaysIcon } from '@heroicons/react/24/solid';
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, PencilSquareIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useTrackerStore, getLevel } from '../store';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -231,12 +231,23 @@ function AnimatedProtocolHeading({ isMobile = false }: { isMobile?: boolean }) {
 }
 
 export default function TopBar() {
-  const { currentDate, setDate, eliteScore, currentUser, logout } = useTrackerStore();
+  const {
+    currentDate,
+    setDate,
+    eliteScore,
+    currentUser,
+    logout,
+    openTemplateEditor,
+    beginScheduleCustomization,
+  } = useTrackerStore();
   const [showCal, setShowCal] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [lastLevel, setLastLevel] = useState(getLevel(eliteScore).level);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const level = getLevel(eliteScore);
+  const profileInitial = (currentUser?.name || currentUser?.email || 'U').trim().charAt(0).toUpperCase();
 
   useEffect(() => {
     const handleResize = () => {
@@ -245,6 +256,17 @@ export default function TopBar() {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
   }, []);
 
   useEffect(() => {
@@ -288,23 +310,199 @@ export default function TopBar() {
               {showCal && <CalendarDropdown value={currentDate} onChange={setDate} onClose={() => setShowCal(false)} />}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <div ref={profileMenuRef} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, position: 'relative' }}>
               <LevelBadgeCircle eliteScore={eliteScore} isMobile />
               {currentUser && (
-                <button
-                  onClick={logout}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 6,
-                    cursor: 'pointer',
-                    borderRadius: 8,
-                    transition: 'background-color 0.2s',
-                  }}
-                  title="Logout"
-                >
-                  <ArrowRightOnRectangleIcon style={{ width: 22, height: 22, color: '#dc2626' }} />
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowProfileMenu((value) => !value)}
+                    style={{
+                      width: 46,
+                      height: 46,
+                      background: 'linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.92))',
+                      border: '1px solid rgba(59, 130, 246, 0.20)',
+                      padding: 0,
+                      cursor: 'pointer',
+                      borderRadius: 16,
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 10px 24px rgba(59, 130, 246, 0.14)',
+                    }}
+                    title="Profile"
+                    aria-label="Profile"
+                  >
+                    <span style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 12,
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: 'linear-gradient(135deg, #ffffff, rgba(255,255,255,0.72))',
+                      border: '1px solid rgba(59,130,246,0.14)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9)',
+                      fontSize: 15,
+                      fontWeight: 900,
+                      color: '#2563eb',
+                    }}>
+                      {profileInitial}
+                    </span>
+                  </button>
+
+                  {showProfileMenu && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 54,
+                        right: 0,
+                        width: 'min(316px, calc(100vw - 18px))',
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,255,0.96))',
+                        border: '1px solid rgba(37, 99, 235, 0.16)',
+                        borderRadius: 22,
+                        boxShadow: '0 24px 60px rgba(37, 99, 235, 0.18)',
+                        padding: 14,
+                        zIndex: 80,
+                        backdropFilter: 'blur(18px)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <div style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 18,
+                          background: 'linear-gradient(135deg, #dbeafe, #eff6ff)',
+                          border: '1px solid rgba(37, 99, 235, 0.14)',
+                          display: 'grid',
+                          placeItems: 'center',
+                          flexShrink: 0,
+                          boxShadow: '0 10px 20px rgba(37, 99, 235, 0.12)',
+                        }}>
+                          <span style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 12,
+                            display: 'grid',
+                            placeItems: 'center',
+                            background: 'rgba(255,255,255,0.9)',
+                            color: '#2563eb',
+                            fontWeight: 900,
+                            fontSize: 15,
+                          }}>
+                            {profileInitial}
+                          </span>
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {currentUser?.name || 'User'}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
+                            {currentUser?.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{
+                        marginBottom: 12,
+                        padding: '10px 12px',
+                        borderRadius: 14,
+                        background: 'rgba(37, 99, 235, 0.06)',
+                        border: '1px solid rgba(37, 99, 235, 0.10)',
+                      }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 2 }}>Daily schedule</div>
+                        <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>
+                          Default plan stays intact. Custom edits save to the current day.
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        <button
+                          onClick={() => {
+                            beginScheduleCustomization();
+                            setShowProfileMenu(false);
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            width: '100%',
+                            minHeight: 40,
+                            padding: '0 14px',
+                            borderRadius: 14,
+                            border: '1px solid rgba(37, 99, 235, 0.18)',
+                            background: '#fff',
+                            color: '#2563eb',
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 8px 16px rgba(37, 99, 235, 0.08)',
+                          }}
+                        >
+                          <PencilSquareIcon style={{ width: 16, height: 16 }} />
+                          Customize
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            openTemplateEditor();
+                            setShowProfileMenu(false);
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            width: '100%',
+                            minHeight: 40,
+                            padding: '0 14px',
+                            borderRadius: 14,
+                            border: '1px solid rgba(124, 58, 237, 0.18)',
+                            background: '#faf5ff',
+                            color: '#7c3aed',
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 8px 16px rgba(124, 58, 237, 0.08)',
+                          }}
+                        >
+                          <SparklesIcon style={{ width: 16, height: 16 }} />
+                          Edit template
+                        </button>
+
+                        <button
+                          onClick={async () => {
+                            setShowProfileMenu(false);
+                            await logout();
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            width: '100%',
+                            minHeight: 40,
+                            padding: '0 14px',
+                            borderRadius: 14,
+                            border: '1px solid rgba(220, 38, 38, 0.16)',
+                            background: '#fff1f2',
+                            color: '#dc2626',
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 8px 16px rgba(220, 38, 38, 0.07)',
+                          }}
+                        >
+                          <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -352,24 +550,187 @@ export default function TopBar() {
         }}>
           <AnimatedProtocolHeading />
         </div>
-        {/* Right: Level Badge Circle and Logout */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+        {/* Right: Level Badge Circle and Profile */}
+        <div ref={profileMenuRef} style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
           <LevelBadgeCircle eliteScore={eliteScore} />
           {currentUser && (
-            <button 
-              onClick={logout}
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                padding: 8, 
-                cursor: 'pointer',
-                borderRadius: 8,
-                transition: 'background-color 0.2s'
-              }}
-              title="Logout"
-            >
-              <ArrowRightOnRectangleIcon style={{ width: 24, height: 24, color: '#dc2626' }} />
-            </button>
+            <>
+              <button
+                onClick={() => setShowProfileMenu((value) => !value)}
+                style={{
+                  width: 44,
+                  height: 44,
+                  background: 'linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.92))',
+                  border: '1px solid rgba(59, 130, 246, 0.20)',
+                  padding: 0,
+                  cursor: 'pointer',
+                  borderRadius: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 10px 24px rgba(59, 130, 246, 0.14)',
+                }}
+                title="Profile"
+                aria-label="Profile"
+              >
+                <span style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 12,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'linear-gradient(135deg, #ffffff, rgba(255,255,255,0.72))',
+                  border: '1px solid rgba(59,130,246,0.14)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9)',
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: '#2563eb',
+                }}>
+                  {profileInitial}
+                </span>
+              </button>
+
+              {showProfileMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 54,
+                    right: 0,
+                    width: 'min(320px, calc(100vw - 18px))',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,255,0.96))',
+                    border: '1px solid rgba(37, 99, 235, 0.16)',
+                    borderRadius: 22,
+                    boxShadow: '0 24px 60px rgba(37, 99, 235, 0.18)',
+                    padding: 14,
+                    zIndex: 80,
+                    backdropFilter: 'blur(18px)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <div style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 18,
+                      background: 'linear-gradient(135deg, #dbeafe, #eff6ff)',
+                      border: '1px solid rgba(37, 99, 235, 0.14)',
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      boxShadow: '0 10px 20px rgba(37, 99, 235, 0.12)',
+                    }}>
+                      <span style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 12,
+                        display: 'grid',
+                        placeItems: 'center',
+                        background: 'rgba(255,255,255,0.9)',
+                        color: '#2563eb',
+                        fontWeight: 900,
+                        fontSize: 14,
+                      }}>
+                        {profileInitial}
+                      </span>
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {currentUser?.name || 'User'}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
+                        {currentUser?.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        beginScheduleCustomization();
+                        setShowProfileMenu(false);
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        width: '100%',
+                        minHeight: 40,
+                        padding: '0 14px',
+                        borderRadius: 14,
+                        border: '1px solid rgba(37, 99, 235, 0.18)',
+                        background: '#fff',
+                        color: '#2563eb',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 8px 16px rgba(37, 99, 235, 0.08)',
+                      }}
+                    >
+                      <PencilSquareIcon style={{ width: 16, height: 16 }} />
+                      Customize
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        beginScheduleCustomization();
+                        openTemplateEditor();
+                        setShowProfileMenu(false);
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        width: '100%',
+                        minHeight: 40,
+                        padding: '0 14px',
+                        borderRadius: 14,
+                        border: '1px solid rgba(124, 58, 237, 0.18)',
+                        background: '#faf5ff',
+                        color: '#7c3aed',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 8px 16px rgba(124, 58, 237, 0.08)',
+                      }}
+                    >
+                      <SparklesIcon style={{ width: 16, height: 16 }} />
+                      Edit template
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        setShowProfileMenu(false);
+                        await logout();
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        width: '100%',
+                        minHeight: 40,
+                        padding: '0 14px',
+                        borderRadius: 14,
+                        border: '1px solid rgba(220, 38, 38, 0.16)',
+                        background: '#fff1f2',
+                        color: '#dc2626',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 8px 16px rgba(220, 38, 38, 0.07)',
+                      }}
+                    >
+                      <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </header>

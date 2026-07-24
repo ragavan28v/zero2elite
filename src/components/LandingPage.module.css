@@ -158,7 +158,12 @@
   max-height: 100%;
   overflow: hidden;
   position: relative;
-  padding-top: 0;
+  padding: 24px 22px 22px;
+  border-radius: 32px;
+  background: transparent;
+  border: 2px solid rgba(33, 150, 243, 0.18);
+  box-shadow:
+    0 0 0 8px rgba(33, 150, 243, 0.08);
 }
 
 @keyframes fadeIn {
@@ -171,7 +176,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 12px;
+  padding-top: 0;
   padding-right: 4px;
 }
 
@@ -830,6 +835,13 @@
     height: auto;
     min-height: 0;
     position: static;
+    padding: 14px;
+    border-radius: 28px;
+    background: transparent;
+    border: 3px solid rgba(33, 150, 243, 0.92);
+    box-shadow:
+      0 0 0 6px rgba(33, 150, 243, 0.08),
+      0 18px 36px rgba(33, 150, 243, 0.12);
   }
 
   .authForm {

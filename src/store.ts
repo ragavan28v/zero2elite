@@ -37,6 +37,11 @@ export interface TrackerState {
   currentUser: User | null;
   startDate: string | null;
   scheduleChoicePending: boolean;
+  scheduleCustomizationActive: boolean;
+  scheduleCustomizationSnapshot: {
+    currentDate: string;
+    days: Record<string, DayData>;
+  } | null;
   templateEditorOpen: boolean;
   authError: string | null;
   authSuccess: string | null;
@@ -52,6 +57,10 @@ export interface TrackerState {
   openTemplateEditor: () => void;
   closeTemplateEditor: () => void;
   setScheduleChoicePending: (value: boolean) => void;
+  setScheduleCustomizationActive: (value: boolean) => void;
+  beginScheduleCustomization: () => void;
+  saveScheduleCustomization: () => void;
+  cancelScheduleCustomization: () => void;
   setJournal: (journal: string) => void;
   resetDay: () => void;
   loadFromFirestore: () => void;
@@ -117,6 +126,7 @@ function getSerializableState(state: TrackerState) {
     challengeStreak,
     lastChallengeDate,
     scheduleChoicePending,
+    scheduleCustomizationActive,
   } = state;
   return {
     currentDate,
@@ -128,6 +138,7 @@ function getSerializableState(state: TrackerState) {
     challengeStreak,
     lastChallengeDate,
     scheduleChoicePending,
+    scheduleCustomizationActive,
   };
 }
 
@@ -232,6 +243,8 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
   currentUser: null,
   startDate: null,
   scheduleChoicePending: false,
+  scheduleCustomizationActive: false,
+  scheduleCustomizationSnapshot: null,
   templateEditorOpen: false,
   authError: null,
   authSuccess: null,
@@ -313,6 +326,54 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     if (currentUser) {
       setDoc(getUserDoc(currentUser.id), getSerializableState(get()));
     }
+  },
+  setScheduleCustomizationActive: (value) => {
+    set({ scheduleCustomizationActive: value });
+    const { currentUser } = get();
+    if (currentUser) {
+      setDoc(getUserDoc(currentUser.id), getSerializableState(get()));
+    }
+  },
+  beginScheduleCustomization: () => {
+    const { currentDate, days } = get();
+    set({
+      scheduleCustomizationActive: true,
+      scheduleCustomizationSnapshot: {
+        currentDate,
+        days: JSON.parse(JSON.stringify(days)),
+      },
+    });
+  },
+  saveScheduleCustomization: () => {
+    const { currentUser } = get();
+    set({ scheduleCustomizationActive: false, scheduleCustomizationSnapshot: null });
+    if (currentUser) {
+      setDoc(getUserDoc(currentUser.id), getSerializableState(get()));
+    }
+  },
+  cancelScheduleCustomization: () => {
+    const { currentUser, scheduleCustomizationSnapshot } = get();
+    if (scheduleCustomizationSnapshot) {
+      set({
+        currentDate: scheduleCustomizationSnapshot.currentDate,
+        days: JSON.parse(JSON.stringify(scheduleCustomizationSnapshot.days)),
+        scheduleCustomizationActive: false,
+        scheduleCustomizationSnapshot: null,
+      });
+      if (currentUser) {
+        setDoc(
+          getUserDoc(currentUser.id),
+          getSerializableState({
+            ...get(),
+            currentDate: scheduleCustomizationSnapshot.currentDate,
+            days: JSON.parse(JSON.stringify(scheduleCustomizationSnapshot.days)),
+          } as TrackerState),
+        );
+      }
+      return;
+    }
+
+    set({ scheduleCustomizationActive: false, scheduleCustomizationSnapshot: null });
   },
   updateBlock: (blockIdx, updates) => {
     const { currentDate, days, currentUser } = get();
@@ -405,7 +466,8 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
       set({
         ...data,
         scheduleTemplate: scheduleTemplate.map((block: Block) => ({ ...block })),
-        scheduleChoicePending: data.scheduleChoicePending ?? false
+        scheduleChoicePending: data.scheduleChoicePending ?? false,
+        scheduleCustomizationActive: data.scheduleCustomizationActive ?? false
       });
     }
   },
@@ -471,7 +533,8 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
           lastChallengeDate: '',
           currentUser: user,
           startDate: user.startDate,
-          scheduleChoicePending: !!isSignUp
+          scheduleChoicePending: !!isSignUp,
+          scheduleCustomizationActive: false
         };
         set(initialState);
         setDoc(getUserDoc(user.id), getSerializableState({ ...get(), ...initialState }));
@@ -490,6 +553,7 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
         currentUser: null, 
         startDate: null,
         scheduleChoicePending: false,
+        scheduleCustomizationActive: false,
         templateEditorOpen: false,
         days: {},
         scheduleTemplate: createDefaultBlocks(),

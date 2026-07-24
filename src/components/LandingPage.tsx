@@ -5,6 +5,7 @@ import { auth } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  getAdditionalUserInfo,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -137,12 +138,12 @@ export default function LandingPage() {
   const handleGoogleSignIn = async () => {
     resetAuthFeedback();
     setIsLoading(true);
-    localStorage.setItem('auth_action', isLogin ? 'signin' : 'signup');
+    localStorage.setItem('auth_action', 'google');
 
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      const isNewUser = getAdditionalUserInfo(result)?.isNewUser ?? false;
 
       const user = {
         id: result.user.uid,
@@ -426,20 +427,20 @@ export default function LandingPage() {
         gap: 12,
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-          padding: '12px 14px',
-          borderRadius: 24,
-          background: 'rgba(255, 255, 255, 0.72)',
-          border: '1px solid rgba(33, 150, 243, 0.16)',
-          boxShadow: '0 10px 24px rgba(33, 150, 243, 0.08)',
-          backdropFilter: 'blur(18px)',
-        }}
-      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            padding: '12px 14px',
+            borderRadius: 24,
+            background: 'rgba(255, 255, 255, 0.18)',
+            border: '1px solid rgba(33, 150, 243, 0.18)',
+            boxShadow: '0 10px 24px rgba(33, 150, 243, 0.08)',
+            backdropFilter: 'blur(18px)',
+          }}
+        >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <FaBrain style={{ fontSize: '1.8rem', color: '#2196f3', flexShrink: 0 }} />
           <span style={{ fontSize: '1.02rem', fontWeight: 700, color: '#1976d2', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
@@ -507,17 +508,14 @@ export default function LandingPage() {
             minHeight: 240,
             padding: '18px 16px',
             background:
-              'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06)), linear-gradient(135deg, rgba(227,242,253,0.4), rgba(100,181,246,0.18)), url(/selfGrowthillustration.png) center/cover no-repeat',
+              'linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)), linear-gradient(135deg, rgba(227,242,253,0.44), rgba(100,181,246,0.22)), url(/selfGrowthillustration.png) center/cover no-repeat',
             boxShadow: '0 18px 42px rgba(33, 150, 243, 0.14)',
-            border: '1px solid rgba(255,255,255,0.5)',
+            border: '1px solid rgba(33,150,243,0.18)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
           }}
         >
-          <div style={{ color: '#0f4c81', letterSpacing: 3.5, fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
-            COGNITIVE EVOLUTION PLATFORM
-          </div>
           <div style={{ color: '#114e8c', fontSize: 'clamp(2.55rem, 13vw, 3.85rem)', lineHeight: 0.92, fontWeight: 300 }}>
             Daily
           </div>
@@ -528,6 +526,43 @@ export default function LandingPage() {
             Set the baseline. Shape the route. Evolve one day at a time.
           </p>
         </article>
+
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              color: '#1976d2',
+              letterSpacing: 0.7,
+              fontSize: 12,
+              fontWeight: 800,
+              padding: '10px 16px',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(33, 150, 243, 0.18)',
+              boxShadow: '0 8px 18px rgba(33,150,243,0.08)',
+              backdropFilter: 'blur(14px)',
+              width: 'min(100%, 340px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>✨</span>
+            <span>Cognitive Evolution Platform</span>
+          </div>
+        </div>
+
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              width: 132,
+              height: 6,
+              borderRadius: 999,
+              background: 'linear-gradient(90deg, #2d8cff 0%, #0d7bdc 100%)',
+              boxShadow: '0 6px 14px rgba(45, 140, 255, 0.28)',
+            }}
+          />
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '2px 2px 0' }}>
           {[
@@ -578,15 +613,15 @@ export default function LandingPage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(33,150,243,0.18)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)', backdropFilter: 'blur(14px)' }}>
             <FaTrophy style={{ fontSize: '1rem' }} />
             <span>10+ Challenges</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(33,150,243,0.18)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)', backdropFilter: 'blur(14px)' }}>
             <FaChartLine style={{ fontSize: '1rem' }} />
             <span>Track Progress</span>
           </div>
-          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(33,150,243,0.16)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)' }}>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 12px', borderRadius: 18, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(33,150,243,0.18)', color: '#1976d2', fontSize: '0.93rem', fontWeight: 700, boxShadow: '0 8px 18px rgba(33,150,243,0.08)', backdropFilter: 'blur(14px)' }}>
             <FaUsers style={{ fontSize: '1rem' }} />
             <span>Join Community</span>
           </div>
@@ -598,10 +633,11 @@ export default function LandingPage() {
         <div
           ref={formContainerRef}
           style={{
-            background: 'rgba(255,255,255,0.9)',
-            border: '1px solid rgba(33,150,243,0.14)',
-            borderRadius: 24,
-            boxShadow: '0 14px 30px rgba(33, 150, 243, 0.09)',
+            background: 'rgba(255,255,255,0.12)',
+            border: '2px solid rgba(33,150,243,0.35)',
+            borderRadius: 28,
+            boxShadow: '0 0 0 4px rgba(33,150,243,0.08)',
+            backdropFilter: 'blur(14px)',
             padding: '14px 14px 16px',
           }}
         >

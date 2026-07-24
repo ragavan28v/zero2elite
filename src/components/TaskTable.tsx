@@ -6,7 +6,6 @@ import {
   TrashIcon,
   XCircleIcon,
   MinusCircleIcon,
-  SparklesIcon,
 } from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import { defaultBlocks, type Block, useTrackerStore } from '../store';
@@ -29,14 +28,15 @@ export default function TaskTable() {
     setScheduleTemplate,
     restoreMasterSchedule,
     templateEditorOpen,
-    openTemplateEditor,
     closeTemplateEditor,
+    scheduleCustomizationActive,
+    saveScheduleCustomization,
+    cancelScheduleCustomization,
   } = useTrackerStore();
 
   const blocks = days[currentDate]?.blocks || cloneDefaultBlocks();
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [noteText, setNoteText] = useState('');
-  const [isCustomizing, setIsCustomizing] = useState(false);
   const [templateDraft, setTemplateDraft] = useState<Block[]>(cloneDefaultBlocks());
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -72,7 +72,6 @@ export default function TaskTable() {
     restoreDefaultSchedule();
     setEditingIdx(null);
     setNoteText('');
-    setIsCustomizing(false);
   };
 
   const handleAddBlock = () => {
@@ -81,7 +80,6 @@ export default function TaskTable() {
       label: 'New custom block',
       status: 'pending',
     });
-    setIsCustomizing(true);
   };
 
   const handleUpdateField = (idx: number, field: 'time' | 'label', value: string) => {
@@ -146,70 +144,21 @@ export default function TaskTable() {
           flexWrap: 'wrap',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: isMobile ? '100%' : 'auto' }}>
-          <SparklesIcon style={{ width: 18, height: 18, color: '#2563eb' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: '#111827' }}>Daily schedule</span>
-            {!isMobile && (
-              <span style={{ fontSize: 12, color: '#6b7280' }}>
-                Default plan stays intact. Custom edits save to the current day.
-              </span>
-            )}
-          </div>
-        </div>
+        <div style={{ minWidth: 0, flex: 1 }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
-          <button
-            onClick={() => setIsCustomizing((value) => !value)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 10,
-              border: '1px solid rgba(37, 99, 235, 0.18)',
-              background: isCustomizing ? '#2563eb' : '#fff',
-              color: isCustomizing ? '#fff' : '#2563eb',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-              flex: isMobile ? 1 : 0,
-            }}
-          >
-            <PencilSquareIcon style={{ width: 16, height: 16 }} />
-            {isCustomizing ? 'Done' : 'Customize'}
-          </button>
-
-          <button
-            onClick={openTemplateEditor}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderRadius: 10,
-              border: '1px solid rgba(124, 58, 237, 0.18)',
-              background: '#faf5ff',
-              color: '#7c3aed',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-              flex: isMobile ? 1 : 0,
-            }}
-          >
-            <SparklesIcon style={{ width: 16, height: 16 }} />
-            {isMobile ? 'Template' : 'Edit template'}
-          </button>
-
-          {isCustomizing && (
+          {scheduleCustomizationActive && (
             <>
               <button
                 onClick={handleAddBlock}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 8,
-                  padding: '8px 12px',
+                  height: 36,
+                  minHeight: 36,
+                  padding: '0 14px',
                   borderRadius: 10,
                   border: '1px solid rgba(34, 197, 94, 0.18)',
                   background: '#f0fdf4',
@@ -217,7 +166,8 @@ export default function TaskTable() {
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  flex: isMobile ? 1 : 0,
+                  whiteSpace: 'nowrap',
+                  flex: isMobile ? '1 1 0' : '0 0 auto',
                 }}
               >
                 <PlusCircleIcon style={{ width: 16, height: 16 }} />
@@ -229,8 +179,11 @@ export default function TaskTable() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 8,
-                  padding: '8px 12px',
+                  height: 36,
+                  minHeight: 36,
+                  padding: '0 14px',
                   borderRadius: 10,
                   border: '1px solid rgba(239, 68, 68, 0.18)',
                   background: '#fff1f2',
@@ -238,11 +191,60 @@ export default function TaskTable() {
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  flex: isMobile ? 1 : 0,
+                  whiteSpace: 'nowrap',
+                  flex: isMobile ? '1 1 0' : '0 0 auto',
                 }}
               >
                 <ArrowPathIcon style={{ width: 16, height: 16 }} />
                 {isMobile ? 'Reset' : 'Restore template'}
+              </button>
+
+              <button
+                onClick={saveScheduleCustomization}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  height: 36,
+                  minHeight: 36,
+                  padding: '0 14px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(34, 197, 94, 0.18)',
+                  background: '#f0fdf4',
+                  color: '#16a34a',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flex: isMobile ? '1 1 0' : '0 0 auto',
+                }}
+              >
+                Save changes
+              </button>
+
+              <button
+                onClick={cancelScheduleCustomization}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  height: 36,
+                  minHeight: 36,
+                  padding: '0 14px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(107, 114, 128, 0.18)',
+                  background: '#fff',
+                  color: '#374151',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flex: isMobile ? '1 1 0' : '0 0 auto',
+                }}
+              >
+                Cancel
               </button>
             </>
           )}
@@ -269,7 +271,7 @@ export default function TaskTable() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                     <div style={{ color: '#2563eb', fontWeight: 700, fontSize: 12, letterSpacing: 0.2 }}>
-                      {isCustomizing ? (
+                      {scheduleCustomizationActive ? (
                         <input
                           value={block.time}
                           onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
@@ -290,7 +292,7 @@ export default function TaskTable() {
                       )}
                     </div>
                     <div style={{ color: '#374151', fontWeight: 500, fontSize: 12, lineHeight: 1.5, wordBreak: 'break-word', flex: 1 }}>
-                      {isCustomizing ? (
+                      {scheduleCustomizationActive ? (
                         <input
                           value={block.label}
                           onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
@@ -344,7 +346,7 @@ export default function TaskTable() {
                 >
                   <MinusCircleIcon style={{ color: block.status === 'pending' ? '#2563eb' : '#e5e7eb', width: 22, height: 22 }} />
                 </button>
-                {isCustomizing && (
+                {scheduleCustomizationActive && (
                   <button
                     onClick={() => handleRemoveBlock(i)}
                     style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}
@@ -405,7 +407,7 @@ export default function TaskTable() {
             {blocks.map((block, i) => (
               <tr key={`${currentDate}-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
                 <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>
-                  {isCustomizing ? (
+                  {scheduleCustomizationActive ? (
                     <input
                       value={block.time}
                       onChange={(e) => handleUpdateField(i, 'time', e.target.value)}
@@ -425,7 +427,7 @@ export default function TaskTable() {
                   )}
                 </td>
                 <td style={{ padding: '4px 8px', color: '#222' }}>
-                  {isCustomizing ? (
+                  {scheduleCustomizationActive ? (
                     <input
                       value={block.label}
                       onChange={(e) => handleUpdateField(i, 'label', e.target.value)}
@@ -523,7 +525,7 @@ export default function TaskTable() {
                       >
                         <PencilSquareIcon style={{ width: 16, height: 16, color: '#888' }} />
                       </button>
-                      {isCustomizing && (
+                      {scheduleCustomizationActive && (
                         <button
                           onClick={() => handleRemoveBlock(i)}
                           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -541,7 +543,7 @@ export default function TaskTable() {
         </table>
       )}
 
-      {isCustomizing && (
+      {scheduleCustomizationActive && (
         <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
           Edit the timing and task title inline. Notes and status still work the same way, so the layout stays familiar while the schedule becomes yours.
         </div>
