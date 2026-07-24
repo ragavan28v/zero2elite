@@ -388,6 +388,10 @@
   box-sizing: border-box;
 }
 
+.inlineFeedbackPopup {
+  display: none;
+}
+
 .feedbackPopup p {
   margin: 0;
   flex: 1;
@@ -650,6 +654,36 @@
     min-height: 100vh;
     max-height: none;
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    perspective: none;
+    transform-style: flat;
+  }
+
+  .topNav {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    gap: 8px;
+    font-size: 1.15rem;
+  }
+
+  .logoIcon {
+    font-size: 1.65rem;
+  }
+
+  .authButtons {
+    margin-left: auto;
+    width: auto;
+  }
+
+  .topNav .authButton {
+    min-width: 72px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 
   .mainContent {
@@ -657,74 +691,209 @@
     overflow: visible;
     height: auto;
     min-height: calc(100vh - 80px);
+    overflow-x: hidden;
+    gap: 10px;
   }
-  
+
   .leftColumn {
     flex: none;
     width: 100%;
-    padding: 40px 24px;
-    align-items: flex-start;
-    justify-content: center;
-    min-height: calc(100vh - 80px);
+    padding: 24px 16px;
+    align-items: center;
+    justify-content: flex-start;
   }
 
   .rightColumn {
     flex: none;
     width: 100%;
-    padding: 40px 24px;
+    padding: 40px 24px 24px;
     justify-content: center;
     align-items: center;
     min-height: auto;
   }
 
-  .embeddedAuthContainer {
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .heroTitle h1 {
-    font-size: 3rem;
-  }
-  
-  .heroSubtitle {
-    font-size: 1.15rem;
-  }
-
   .heroContent {
     max-width: 100%;
+    width: 100%;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .heroBadgeContainer {
+    align-items: center;
+    margin-bottom: 2px;
+    width: 100%;
+  }
+
+  .heroBadge {
+    font-size: 0.9rem;
+    padding: 10px 16px;
+    max-width: 100%;
+    justify-content: center;
+    width: min(100%, 300px);
+  }
+
+  .badgeUnderline {
+    width: 104px;
+    height: 5px;
+    margin: 8px auto 0;
+  }
+
+  .heroSubtitle {
+    font-size: 0.95rem;
+    max-width: 100%;
+    margin-bottom: 8px;
+    text-align: center;
+    line-height: 1.65;
   }
 
   .featuresAndStatsContainer {
     flex-direction: column;
-    gap: 24px;
+    gap: 18px;
+    align-items: center;
+    margin-top: 4px;
   }
 
   .coreFeaturesList {
     width: 100%;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .featureItem {
+    gap: 12px;
+    width: min(100%, 300px);
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+  }
+
+  .featureItemText h3 {
+    font-size: 1rem;
+  }
+
+  .featureItemText {
+    align-items: center;
+  }
+
+  .featureItemText p {
+    font-size: 0.8rem;
   }
 
   .verticalStatsList {
     width: 100%;
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 12px;
     justify-content: center;
   }
 
   .statItem {
-    width: calc(50% - 7px);
-    min-width: 150px;
+    width: calc(50% - 6px);
     justify-content: center;
+    min-width: 0;
+    padding: 10px 12px;
+    margin: 0;
+    flex: 1 1 calc(50% - 6px);
+    max-width: calc(50% - 6px);
   }
 
+  .statItem:last-child {
+    flex: 0 1 68%;
+    max-width: 68%;
+  }
+
+  .embeddedAuthContainer {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-margin-top: 16px;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .authForm {
+    gap: 9px;
+    padding-right: 0;
+  }
+
+  .authForm h3 {
+    font-size: 1.35rem;
+  }
+
+  .formSubtitle {
+    font-size: 0.78rem;
+  }
+
+  .feedbackPopup {
+    display: none;
+  }
+
+  .inlineFeedbackPopup {
+    display: flex;
+    position: static;
+    transform: none;
+    left: auto;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 4px 0;
+  }
+}
+
+@media (max-width: 480px) {
   .topNav {
-    padding: 12px 20px;
+    padding: 10px 12px;
+  }
+
+  .logo {
+    font-size: 1.02rem;
   }
 
   .topNav .authButton {
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    min-height: 44px;
-    min-width: 90px;
+    min-width: 66px;
+    padding: 7px 10px;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    padding: 20px 12px;
+  }
+
+  .heroBadge {
+    font-size: 0.86rem;
+    padding: 9px 12px;
+    width: min(100%, 280px);
+  }
+
+  .heroSubtitle {
+    font-size: 0.9rem;
+  }
+
+  .featureItemText h3 {
+    font-size: 0.95rem;
+  }
+
+  .featureItemText p {
+    font-size: 0.76rem;
+  }
+
+  .statItem {
+    width: calc(50% - 6px);
+    flex-basis: calc(50% - 6px);
+    max-width: calc(50% - 6px);
+    font-size: 0.82rem;
+    padding: 9px 10px;
+  }
+
+  .statItem:last-child {
+    flex-basis: 60%;
+    max-width: 60%;
   }
 
   .feedbackPopup {
@@ -736,4 +905,3 @@
     transform: none;
   }
 }
- 

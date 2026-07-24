@@ -10,6 +10,10 @@ html, body {
   color: #12304f;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 #root {
   /* max-width: 1280px; */
   /* margin: 0 auto; */
@@ -110,6 +114,44 @@ main {
     gap: 1.5rem;
     max-width: 100%;
   }
+  .main-content {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  html, body, #root {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .elite-root,
+  .elite-main {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .elite-root {
+    display: block;
+  }
+
+  .elite-main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-main {
+    flex-direction: column;
+    gap: 0;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+
   .main-content {
     width: 100%;
   }

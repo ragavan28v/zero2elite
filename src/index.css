@@ -60,6 +60,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
   color: #222;
+  -webkit-tap-highlight-color: transparent;
 }
 button:hover {
   border-color: #2563eb;
@@ -67,7 +68,12 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
+}
+button:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(33, 150, 243, 0.16),
+    0 0 0 6px rgba(33, 150, 243, 0.08);
 }
 
 ::-webkit-scrollbar {

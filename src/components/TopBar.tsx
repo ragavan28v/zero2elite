@@ -53,7 +53,7 @@ function CalendarDropdown({ value, onChange, onClose }: { value: string; onChang
   );
 }
 
-function LevelBadgeCircle({ eliteScore }: { eliteScore: number }) {
+function LevelBadgeCircle({ eliteScore, isMobile = false }: { eliteScore: number; isMobile?: boolean }) {
   const level = getLevel(eliteScore);
   // Use prevLevelXP and nextLevelXP for progress
   const progress = Math.max(0, Math.min(1, (eliteScore - level.prevLevelXP) / (level.nextLevelXP - level.prevLevelXP)));
@@ -68,8 +68,11 @@ function LevelBadgeCircle({ eliteScore }: { eliteScore: number }) {
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
   const offset = circ * (1 - animatedProgress);
+  const iconFontSize = isMobile ? 18 : 28;
+  const titleFontSize = isMobile ? 13 : 18;
+  const infoFontSize = isMobile ? 12 : 15;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 220 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 18, minWidth: isMobile ? 140 : 220 }}>
       <div style={{ position: 'relative', width: size, height: size }} title={`${level.title} (XP: ${eliteScore})`}>
         <svg width={size} height={size} style={{ position: 'absolute', top: 0, left: 0 }}>
           <circle
@@ -108,16 +111,16 @@ function LevelBadgeCircle({ eliteScore }: { eliteScore: number }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 28,
+          fontSize: iconFontSize,
           fontWeight: 700,
           userSelect: 'none',
         }}>{level.icon}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-        <span style={{ fontWeight: 700, color: '#2563eb', fontSize: 18 }}>{level.title}</span>
-        <span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 16, fontWeight: 500, fontSize: 15 }}>
+        <span style={{ fontWeight: 700, color: '#2563eb', fontSize: titleFontSize }}>{level.title}</span>
+        <span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 16, fontWeight: 500, fontSize: infoFontSize }}>
           <span style={{ color: '#2563eb', fontWeight: 700 }}>XP: <b>{eliteScore}</b></span>
-          <span style={{ color: '#888', fontWeight: 500, fontSize: 15, marginLeft: 2 }}>
+          <span style={{ color: '#888', fontWeight: 500, fontSize: infoFontSize, marginLeft: 2 }}>
             {level.xpToNext > 0 ? `+${level.xpToNext} XP to next` : 'Max Level'}
           </span>
         </span>
@@ -166,7 +169,7 @@ function LevelUpModal({ level, onClose }: { level: { icon: string, title: string
   );
 }
 
-function AnimatedProtocolHeading() {
+function AnimatedProtocolHeading({ isMobile = false }: { isMobile?: boolean }) {
   const phrase = 'Awaken. Grind. Evolve. Dominate. Repeat.';
   const [displayed, setDisplayed] = useState('');
   useEffect(() => {
@@ -195,16 +198,16 @@ function AnimatedProtocolHeading() {
   }, []);
   return (
     <div style={{
-      position: 'absolute',
-      left: '50%',
-      top: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: 'max-content',
-      maxWidth: '60vw',
+      position: isMobile ? 'relative' : 'absolute',
+      left: isMobile ? 0 : '50%',
+      top: isMobile ? 0 : '50%',
+      transform: isMobile ? 'none' : 'translate(-50%, -50%)',
+      width: isMobile ? '100%' : 'max-content',
+      maxWidth: isMobile ? '100%' : '60vw',
       whiteSpace: 'nowrap',
-      fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
+      fontSize: isMobile ? '0.82rem' : 'clamp(1.05rem, 1.5vw, 1.25rem)',
       fontWeight: 700,
-      letterSpacing: 1.1,
+      letterSpacing: isMobile ? 0.2 : 1.1,
       textShadow: '0 2px 8px #2563eb11',
       fontFamily: 'inherit',
       minHeight: 30,
@@ -214,9 +217,11 @@ function AnimatedProtocolHeading() {
       pointerEvents: 'none',
       textOverflow: 'ellipsis',
       overflow: 'hidden',
+      textAlign: 'center',
+      padding: isMobile ? '6px 0 0' : 0,
     }}>
-      <span style={{ color: '#2563eb', fontWeight: 700, marginRight: 10 }}>Eclipse Protocol:</span>
-      <span style={{ color: '#222', fontWeight: 700, marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}>
+      <span style={{ color: '#2563eb', fontWeight: 700, marginRight: isMobile ? 4 : 10 }}>Eclipse Protocol:</span>
+      <span style={{ color: '#222', fontWeight: 700, marginLeft: isMobile ? 0 : 2, display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap' }}>
         {displayed}
         <span style={{ display: 'inline-block', width: 14, color: '#2563eb', animation: 'blink 1s steps(1) infinite' }}>|</span>
         <style>{`@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }`}</style>
@@ -230,7 +235,17 @@ export default function TopBar() {
   const [showCal, setShowCal] = useState(false);
   const [lastLevel, setLastLevel] = useState(getLevel(eliteScore).level);
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const level = getLevel(eliteScore);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (level.level > lastLevel) {
@@ -244,6 +259,69 @@ export default function TopBar() {
 
   return (
     <>
+      {isMobile ? (
+        <header className="topbar" style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          padding: '0.75rem 0.75rem 0.9rem',
+          boxSizing: 'border-box',
+          background: 'linear-gradient(90deg, #f8fafc 60%, #e0e7ef 100%)',
+          borderBottom: '1px solid #e5e7eb',
+          minHeight: 'auto',
+          position: 'relative',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <button
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: 10, padding: 7, cursor: 'pointer', flexShrink: 0 }}
+                title="Pick date"
+                aria-label="Pick date"
+                onClick={() => setShowCal((v) => !v)}
+              >
+                <CalendarDaysIcon style={{ width: 22, height: 22, color: '#2563eb' }} />
+              </button>
+              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 1.2, color: '#222', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                {formatDate(currentDate)}
+              </span>
+              {showCal && <CalendarDropdown value={currentDate} onChange={setDate} onClose={() => setShowCal(false)} />}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <LevelBadgeCircle eliteScore={eliteScore} isMobile />
+              {currentUser && (
+                <button
+                  onClick={logout}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 6,
+                    cursor: 'pointer',
+                    borderRadius: 8,
+                    transition: 'background-color 0.2s',
+                  }}
+                  title="Logout"
+                >
+                  <ArrowRightOnRectangleIcon style={{ width: 22, height: 22, color: '#dc2626' }} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            width: '100%',
+            textAlign: 'center',
+          }}>
+            <AnimatedProtocolHeading isMobile />
+          </div>
+        </header>
+      ) : (
       <header className="topbar" style={{
         width: '100%',
         display: 'flex',
@@ -295,7 +373,8 @@ export default function TopBar() {
           )}
         </div>
       </header>
+      )}
       {showLevelUp && <LevelUpModal level={{ ...level, icon: String(level.icon), title: String(level.title) }} onClose={() => setShowLevelUp(false)} />}
     </>
   );
-} 
+}

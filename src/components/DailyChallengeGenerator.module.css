@@ -877,6 +877,106 @@
   transform: none;
 }
 
+@media (max-width: 768px) {
+  .schulteCard {
+    padding: 18px 14px;
+    margin-top: 16px;
+    align-items: stretch;
+  }
+
+  .schulteCard h3 {
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+  }
+
+  .schulteContent {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    gap: 14px;
+  }
+
+  .schulteLeftPanel {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    gap: 14px;
+  }
+
+  .schulteRightPanel {
+    width: 100%;
+    padding: 0;
+  }
+
+  .schulteTimerSection {
+    margin-bottom: 0;
+  }
+
+  .schulteStartButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .schulteTimer {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .schulteStats {
+    margin-bottom: 0;
+  }
+
+  .schulteActionButtons {
+    justify-content: flex-end;
+  }
+
+  .schulteGrid {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .schulteRow {
+    gap: 4px;
+  }
+
+  .schulteCell {
+    width: clamp(42px, 17vw, 50px);
+    height: clamp(42px, 17vw, 50px);
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .schulteCard {
+    padding: 16px 12px;
+  }
+
+  .schulteCard h3 {
+    font-size: 1.05rem;
+  }
+
+  .schulteLeftPanel {
+    gap: 12px;
+  }
+
+  .schulteTimer {
+    max-width: 220px;
+    padding: 10px 16px;
+  }
+
+  .schulteCompletionCount,
+  .schulteCompletionMessage {
+    font-size: 0.82rem;
+  }
+
+  .schulteCell {
+    width: clamp(36px, 16vw, 44px);
+    height: clamp(36px, 16vw, 44px);
+    font-size: 0.92rem;
+    border-radius: 7px;
+  }
+}
+
 /* Placeholder Challenge Cards */
 .placeholderCard {
   background: rgba(255,255,255,0.68);
