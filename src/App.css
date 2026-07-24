@@ -583,18 +583,20 @@ main {
 @media (max-width: 640px) {
   .schedule-choice-overlay {
     padding: 0;
+    overflow-y: auto;
   }
 
   .schedule-choice-shell {
     grid-template-columns: 1fr;
-    min-height: 100vh;
+    min-height: 100dvh;
     width: 100vw;
-    height: 100vh;
+    height: auto;
     border-radius: 0;
+    overflow-y: auto;
   }
 
   .schedule-choice-visual {
-    min-height: 30vh;
+    display: none;
   }
 
   .schedule-choice-visual-core {
@@ -607,6 +609,7 @@ main {
     padding: 18px 16px 20px;
     align-items: center;
     text-align: center;
+    min-height: 100dvh;
   }
 
   .schedule-choice-content h2,

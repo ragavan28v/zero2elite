@@ -421,13 +421,12 @@ export default function LandingPage() {
     <div
       className={styles.landingContainer}
       style={{
-        position: 'fixed',
-        inset: 0,
         width: '100%',
-        height: '100dvh',
-        overflowY: 'auto',
+        minHeight: '100dvh',
+        height: 'auto',
+        position: 'relative',
+        overflowY: 'visible',
         overflowX: 'hidden',
-        WebkitOverflowScrolling: 'touch',
       }}
     >
       <div className={styles.backgroundElements}>
@@ -469,6 +468,7 @@ export default function LandingPage() {
 
       <main className={styles.mainContent} style={{ flexDirection: 'column', gap: 0, height: 'auto', minHeight: 'auto' }}>
         <section className={styles.leftColumn} style={{ padding: '16px 12px 18px', alignItems: 'center' }}>
+          {!isMobile && (
           <div
             style={{
               width: '100%',
@@ -498,8 +498,9 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+          )}
 
-          <div className={styles.heroContent} style={{ width: '100%', maxWidth: '100%', alignItems: 'center', gap: 14, marginTop: 20 }}>
+          <div className={styles.heroContent} style={{ width: '100%', maxWidth: '100%', alignItems: 'center', gap: 14, marginTop: 8 }}>
             <div className={styles.heroBadgeContainer} style={{ alignItems: 'center', width: '100%', marginBottom: 4 }}>
               <div className={styles.heroBadge} style={{ width: 'min(100%, 280px)', fontSize: '0.86rem', padding: '9px 12px' }}>
                 <span>✨ Cognitive Evolution Platform</span>
