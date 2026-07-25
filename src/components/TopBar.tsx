@@ -673,7 +673,6 @@ export default function TopBar() {
 
                     <button
                       onClick={() => {
-                        beginScheduleCustomization();
                         openTemplateEditor();
                         setShowProfileMenu(false);
                       }}

@@ -14,6 +14,10 @@ function cloneDefaultBlocks() {
   return defaultBlocks.map((block) => ({ ...block }));
 }
 
+function makeTemplateBlockId() {
+  return globalThis.crypto?.randomUUID?.() ?? `template-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export default function TaskTable() {
   const {
     currentDate,
@@ -103,7 +107,7 @@ export default function TaskTable() {
   const handleTemplateAdd = () => {
     setTemplateDraft((prev) => [
       ...prev,
-      { time: '12:00 PM', label: 'New template block', status: 'pending' },
+      { id: makeTemplateBlockId(), time: '12:00 PM', label: 'New template block', status: 'pending' },
     ]);
   };
 
@@ -255,7 +259,7 @@ export default function TaskTable() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {blocks.map((block, i) => (
             <div
-              key={`${currentDate}-${i}-${block.time}-${block.label}`}
+              key={block.id}
               style={{
                 background: '#fff',
                 border: '1px solid #e5e7eb',
@@ -405,7 +409,7 @@ export default function TaskTable() {
           </thead>
           <tbody>
             {blocks.map((block, i) => (
-              <tr key={`${currentDate}-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <tr key={block.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                 <td style={{ padding: '4px 8px', color: '#2563eb', fontWeight: 500 }}>
                   {scheduleCustomizationActive ? (
                     <input
@@ -554,29 +558,38 @@ export default function TaskTable() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.42)',
-            backdropFilter: 'blur(10px)',
+            background: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(6px)',
             zIndex: 2500,
-            display: 'grid',
-            placeItems: 'center',
-            padding: 16,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'stretch',
+            padding: 0,
           }}
         >
           <div
             style={{
-              width: 'min(1100px, 100%)',
-              maxHeight: '90vh',
+              width: 'min(1240px, 100%)',
+              maxHeight: '100vh',
               overflow: 'auto',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
-              borderRadius: 24,
-              border: '1px solid rgba(37, 99, 235, 0.14)',
-              boxShadow: '0 30px 80px rgba(15, 23, 42, 0.24)',
-              padding: 24,
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))',
+              borderRadius: 0,
+              border: 'none',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
+              padding: '28px 32px 28px',
               display: 'grid',
-              gap: 16,
+              gap: 18,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
               <div>
                 <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, color: '#7c3aed', textTransform: 'uppercase' }}>
                   Personal template
@@ -658,7 +671,7 @@ export default function TaskTable() {
                 </thead>
                 <tbody>
                   {templateDraft.map((block, i) => (
-                    <tr key={`template-${i}-${block.time}-${block.label}`} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <tr key={block.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                       <td style={{ padding: '4px 8px' }}>
                         <input
                           value={block.time}
@@ -672,6 +685,7 @@ export default function TaskTable() {
                             outline: 'none',
                             color: '#2563eb',
                             fontWeight: 600,
+                            background: '#fff',
                           }}
                         />
                       </td>
@@ -688,6 +702,7 @@ export default function TaskTable() {
                             outline: 'none',
                             color: '#111827',
                             fontWeight: 500,
+                            background: '#fff',
                           }}
                         />
                       </td>

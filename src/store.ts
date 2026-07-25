@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth';
 export type BlockStatus = 'pending' | 'done' | 'skipped';
 
 export interface Block {
+  id: string;
   time: string;
   label: string;
   status: BlockStatus;
@@ -72,7 +73,7 @@ export interface TrackerState {
   logout: () => void;
 }
 
-export const defaultBlocks: Block[] = [
+const defaultBlockTemplates: Array<Omit<Block, 'id'>> = [
   { time: '5:00–5:15 AM', label: 'Hydrate + Stretch', status: 'pending' },
   { time: '5:15–5:30 AM', label: 'Breath Meditation', status: 'pending' },
   { time: '5:30–6:00 AM', label: 'Workout', status: 'pending' },
@@ -91,6 +92,11 @@ export const defaultBlocks: Block[] = [
   { time: '11:30 PM', label: 'Sleep', status: 'pending' },
 ];
 
+export const defaultBlocks: Block[] = defaultBlockTemplates.map((block, index) => ({
+  id: `default-${index + 1}`,
+  ...block,
+}));
+
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -99,9 +105,43 @@ function getUserDoc(userId: string) {
   return doc(db, 'users', userId);
 }
 
+function createBlockId(prefix = 'block') {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeBlock(block: Partial<Block>, fallbackIdPrefix = 'block'): Block {
+  return {
+    id: block.id ?? createBlockId(fallbackIdPrefix),
+    time: block.time ?? '12:00 PM',
+    label: block.label ?? 'New custom block',
+    status: block.status ?? 'pending',
+    note: block.note,
+  };
+}
+
 function createDefaultBlocks(): Block[] {
   return defaultBlocks.map((block) => ({ ...block }));
 }
+
+function normalizeBlocks(blocks: Array<Partial<Block>> | undefined, fallbackIdPrefix = 'block') {
+  return Array.isArray(blocks) && blocks.length
+    ? blocks.map((block) => normalizeBlock(block, fallbackIdPrefix))
+    : createDefaultBlocks();
+}
+
+type PersistedDay = {
+  date: string;
+  blocks?: Array<Partial<Block>>;
+  journal?: string;
+};
+
+type PersistedState = {
+  scheduleTemplate?: Array<Partial<Block>>;
+  days?: Record<string, PersistedDay>;
+  scheduleChoicePending?: boolean;
+  scheduleCustomizationActive?: boolean;
+  [key: string]: unknown;
+};
 
 function getRequiredTasks(taskCount: number, dayIndex: number): number {
   const ratio = dayIndex < 31 ? 0.7 : dayIndex < 61 ? 0.8 : 0.85;
@@ -189,7 +229,6 @@ export function getLevel(eliteScore: number) {
 function calculateGamifiedStats(days: Record<string, DayData>, currentDate: string): { streak: number, eliteScore: number, lastStreakDate: string } {
   let eliteScore = 0;
   let lastStreakDate = '';
-  let streakBonusDays = 0;
   // Sort dates ascending
   const sortedDates = Object.keys(days).sort();
   // Calculate eliteScore for all days
@@ -220,7 +259,6 @@ function calculateGamifiedStats(days: Record<string, DayData>, currentDate: stri
       lastStreakDate = date;
       if (streak > 0 && streak % 7 === 0) {
         eliteScore += 10; // 7-day streak bonus
-        streakBonusDays++;
       }
     } else {
       streaking = false;
@@ -391,12 +429,7 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     const { currentDate, days, currentUser } = get();
     if (!currentUser) return;
 
-    const nextBlock: Block = {
-      time: block.time ?? '12:00 PM',
-      label: block.label ?? 'New custom block',
-      status: block.status ?? 'pending',
-      note: block.note,
-    };
+    const nextBlock = normalizeBlock(block, 'day-block');
 
     days[currentDate].blocks = [...days[currentDate].blocks, nextBlock];
     const stats = calculateGamifiedStats(days, currentDate);
@@ -446,26 +479,35 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
     
     const snap = await getDoc(getUserDoc(currentUser.id));
     if (snap.exists()) {
-      const data = snap.data() as any;
+      const data = snap.data() as PersistedState;
       const today = getToday();
-      const scheduleTemplate = Array.isArray(data.scheduleTemplate) && data.scheduleTemplate.length
-        ? data.scheduleTemplate
-        : createDefaultBlocks();
+      const scheduleTemplate = normalizeBlocks(data.scheduleTemplate, 'template');
+      const normalizedDays = Object.fromEntries(
+        Object.entries(data.days ?? {}).map(([date, day]) => {
+          const persistedDay = day as PersistedDay;
+          return [
+            date,
+            {
+              date: persistedDay.date ?? date,
+              blocks: normalizeBlocks(persistedDay?.blocks, `day-${date}`),
+              journal: persistedDay.journal,
+            },
+          ];
+        }),
+      ) as Record<string, DayData>;
       
       // Ensure current date has blocks
-      if (!data.days || !data.days[today]) {
-        data.days = {
-          ...data.days,
-          [today]: { 
-            date: today, 
-            blocks: scheduleTemplate.map((block: Block) => ({ ...block }))
-          }
+      if (!normalizedDays[today]) {
+        normalizedDays[today] = {
+          date: today,
+          blocks: scheduleTemplate.map((block) => ({ ...block })),
         };
       }
       
       set({
-        ...data,
-        scheduleTemplate: scheduleTemplate.map((block: Block) => ({ ...block })),
+        ...(data as Partial<TrackerState>),
+        days: normalizedDays,
+        scheduleTemplate: scheduleTemplate.map((block) => ({ ...block })),
         scheduleChoicePending: data.scheduleChoicePending ?? false,
         scheduleCustomizationActive: data.scheduleCustomizationActive ?? false
       });
@@ -505,9 +547,10 @@ export const useTrackerStore = create<TrackerState>((set, get) => ({
         if (exists) {
           state.loadFromFirestore();
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { code?: string; message?: string };
         console.warn('Store init: Firestore read check failed (possible rules denial on non-existent doc):', err);
-        if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+        if (error.code === 'permission-denied' || error.message?.includes('permission')) {
           exists = false;
         } else {
           console.error('Firestore critical read error:', err);
